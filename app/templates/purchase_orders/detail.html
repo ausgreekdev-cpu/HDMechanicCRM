@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-cart me-2"></i>PO {{ po.po_number }}</h4>
+    <a href="/purchase-orders" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header"><strong>Details</strong></div>
+            <div class="card-body">
+                <p class="mb-1"><strong>PO#:</strong> {{ po.po_number }}</p>
+                <p class="mb-1"><strong>Supplier:</strong> {{ po.supplier }}</p>
+                <p class="mb-1"><strong>Status:</strong> <span class="badge bg-{% if po.status == 'Pending' %}warning{% elif po.status == 'Ordered' %}primary{% elif po.status == 'Partial' %}info{% elif po.status == 'Received' %}success{% else %}danger{% endif %}">{{ po.status }}</span></p>
+                <p class="mb-1"><strong>Order Date:</strong> {{ po.order_date.strftime('%m/%d/%Y') if po.order_date else '-' }}</p>
+                <p class="mb-0"><strong>Received Date:</strong> {{ po.received_date.strftime('%m/%d/%Y') if po.received_date else '-' }}</p>
+            </div>
+        </div>
+        {% if po.notes %}
+        <div class="card mt-3">
+            <div class="card-header"><strong>Notes</strong></div>
+            <div class="card-body"><p class="mb-0">{{ po.notes }}</p></div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><strong>Line Items ({{ po.items|length }})</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Part Name</th><th>Part #</th><th>Ordered</th><th>Received</th><th>Unit Cost</th><th>Total</th></tr></thead>
+                    <tbody>
+                        {% for item in po.items %}
+                        <tr>
+                            <td>{{ item.part.name if item.part else 'N/A' }}</td>
+                            <td><small class="text-muted">{{ item.part.part_number if item.part else '-' }}</small></td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.qty_received or 0 }}</td>
+                            <td>${{ "%.2f"|format(item.unit_cost) }}</td>
+                            <td>${{ "%.2f"|format(item.quantity * item.unit_cost) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-3 text-muted">No items</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if po.status in ('Pending', 'Ordered') %}
+        <div class="card mt-3" id="receive">
+            <div class="card-header bg-success text-white"><i class="bi bi-box-arrow-in-down me-1"></i><strong>Receive Stock</strong></div>
+            <div class="card-body">
+                <form method="post" action="/purchase-orders/{{ po.id }}/receive">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-2">
+                            <thead><tr><th>Item</th><th>Ordered</th><th>Qty Received</th></tr></thead>
+                            <tbody>
+                                {% for item in po.items %}
+                                <tr>
+                                    <td>{{ item.part.name if item.part else 'N/A' }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td><input type="number" name="qty_received_{{ item.id }}" class="form-control form-control-sm" value="{{ item.quantity - (item.qty_received or 0) }}" min="0" max="{{ item.quantity - (item.qty_received or 0) }}" style="width:100px"></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Receive Items</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

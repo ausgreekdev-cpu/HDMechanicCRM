@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Late Fee Rules</h4><div><form method="POST" action="/finance/apply-late-fees" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-warning btn-sm me-2">Apply Late Fees Now</button></form><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Rule</button></div></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Name</th><th>Days Overdue</th><th>Type</th><th class="text-end">Value</th><th class="text-end">Max Fee</th><th>Active</th></tr></thead>
+<tbody>{% for r in rules %}<tr><td>{{ r.name }}</td><td>{{ r.days_overdue }}</td><td>{{ r.fee_type }}</td><td class="text-end">{{ r.fee_value }}{{ '%' if r.fee_type == 'Percentage' else '' }}</td><td class="text-end">${{ '%.2f'|format(r.max_fee) if r.max_fee else 'None' }}</td><td>{% if r.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No rules</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

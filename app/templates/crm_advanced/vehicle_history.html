@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Vehicle History: {{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }}</h4><button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div>
+<p><small class="text-muted">{{ vehicle.vin or '' }} — {{ vehicle.license_plate or '' }}</small></p>
+<div class="row"><div class="col-md-6">
+<div class="card mb-3"><div class="card-header"><strong>Work Orders ({{ wos|length }})</strong></div>
+<div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Title</th><th>Status</th><th class="text-end">Total</th></tr></thead>
+<tbody>{% for wo in wos %}<tr><td><small>{{ wo.created_at.strftime('%m/%d/%Y') }}</small></td><td><a href="/work-orders/{{ wo.id }}">{{ wo.title }}</a></td><td>{{ wo.status }}</td><td class="text-end">${{ '%.2f'|format(wo.total_amount) }}</td></tr>{% else %}<tr><td colspan="4" class="text-muted text-center">None</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="card mb-3"><div class="card-header"><strong>DOT Inspections ({{ dot|length }})</strong></div>
+<div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Result</th><th>Inspector</th></tr></thead>
+<tbody>{% for i in dot %}<tr><td><small>{{ i.inspection_date.strftime('%m/%d/%Y') }}</small></td><td>{{ i.result }}</td><td>{{ i.inspector or '' }}</td></tr>{% else %}<tr><td colspan="3" class="text-muted text-center">None</td></tr>{% endfor %}</tbody></table></div></div>
+</div><div class="col-md-6">
+<div class="card mb-3"><div class="card-header"><strong>Fuel Records ({{ fuel|length }})</strong></div>
+<div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>Date</th><th class="text-end">Gal</th><th class="text-end">$/Gal</th><th class="text-end">Total</th><th>Odometer</th></tr></thead>
+<tbody>{% for f in fuel %}<tr><td><small>{{ f.fuel_date.strftime('%m/%d/%Y') }}</small></td><td class="text-end">{{ f.gallons }}</td><td class="text-end">${{ '%.2f'|format(f.price_per_gallon) }}</td><td class="text-end">${{ '%.2f'|format(f.total_cost) }}</td><td>{{ f.odometer or '' }}</td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">None</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="card mb-3"><div class="card-header"><strong>Emissions ({{ emissions|length }})</strong></div>
+<div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Type</th><th>Cost</th></tr></thead>
+<tbody>{% for e in emissions %}<tr><td><small>{{ e.service_date.strftime('%m/%d/%Y') }}</small></td><td>{{ e.record_type }}</td><td>${{ '%.2f'|format(e.cost) }}</td></tr>{% else %}<tr><td colspan="3" class="text-muted text-center">None</td></tr>{% endfor %}</tbody></table></div></div>
+</div></div>
+{% endblock %}

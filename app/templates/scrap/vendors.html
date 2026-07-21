@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-shop me-2"></i>Scrap Metal Vendors</h4>
+    <a href="/scrap/vendors/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Vendor</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto"><input type="text" name="search" class="form-control form-control-sm search-bar" placeholder="Search vendors..." value="{{ search }}"></div>
+            <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-search"></i></button></div>
+            {% if search %}<div class="col-auto"><a href="/scrap/vendors" class="btn btn-sm btn-outline-secondary">Clear</a></div>{% endif %}
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Materials</th><th>Pickups</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for v in p.rows %}
+                    <tr>
+                        <td class="fw-medium">{{ v.name }}</td>
+                        <td>{{ v.contact_person or '-' }}</td>
+                        <td>{{ v.phone or '-' }}</td>
+                        <td><small class="text-muted">{{ v.material_types or '-' }}</small></td>
+                        <td><span class="badge bg-info">{{ v.pickups|length }}</span></td>
+                        <td>
+                            <a href="/scrap/vendors/{{ v.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                            <form method="post" action="/scrap/vendors/{{ v.id }}/delete" class="d-inline" onsubmit="return confirm('Delete vendor?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center py-4 text-muted">No vendors found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "pagination.html" %}
+    </div>
+</div>
+{% endblock %}

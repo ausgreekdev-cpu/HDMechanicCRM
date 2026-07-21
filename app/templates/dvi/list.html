@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Digital Vehicle Inspections</h4>
+    <a href="/dvi/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Inspection</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="Pass" {% if status == 'Pass' %}selected{% endif %}>Pass</option>
+                    <option value="Fail" {% if status == 'Fail' %}selected{% endif %}>Fail</option>
+                    <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-funnel"></i></button></div>
+            {% if status %}<div class="col-auto"><a href="/dvi" class="btn btn-sm btn-outline-secondary">View All</a></div>{% endif %}
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Date</th><th>Vehicle</th><th>Technician</th><th>Status</th><th>Items</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for dvi in p.rows %}
+                    <tr>
+                        <td><small class="text-muted">{{ dvi.inspection_date.strftime('%m/%d/%Y') }}</small></td>
+                        <td class="fw-medium">{{ dvi.vehicle.make }} {{ dvi.vehicle.model }}</td>
+                        <td>{{ dvi.technician.name }}</td>
+                        <td><span class="badge bg-{% if dvi.status == 'Pass' %}success{% elif dvi.status == 'Fail' %}danger{% else %}warning{% endif %}">{{ dvi.status }}</span></td>
+                        <td><span class="badge bg-secondary">{{ dvi.items|length }}</span></td>
+                        <td>
+                            <a href="/dvi/{{ dvi.id }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center py-4 text-muted">No inspections found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "pagination.html" %}
+    </div>
+</div>
+{% endblock %}

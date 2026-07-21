@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-0">{% if vehicle %}Edit Vehicle{% else %}New Vehicle{% endif %}</h4>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{% if vehicle %}/vehicles/{{ vehicle.id }}/edit{% else %}/vehicles/new{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Owner *</label>
+                    <select name="customer_id" class="form-select" required>
+                        <option value="">Select customer...</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}" {% if vehicle and vehicle.customer_id == c.id %}selected{% elif preselected_customer|string == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3"><label class="form-label">Make</label><input type="text" name="make" class="form-control" value="{{ vehicle.make if vehicle else '' }}"></div>
+                <div class="col-md-3"><label class="form-label">Model</label><input type="text" name="model" class="form-control" value="{{ vehicle.model if vehicle else '' }}"></div>
+                <div class="col-md-3"><label class="form-label">Year</label><input type="number" name="year" class="form-control" value="{{ vehicle.year if vehicle else '' }}"></div>
+                <div class="col-md-3"><label class="form-label">License Plate</label><input type="text" name="license_plate" class="form-control" value="{{ vehicle.license_plate if vehicle else '' }}"></div>
+                <div class="col-md-3"><label class="form-label">VIN</label><input type="text" name="vin" class="form-control" value="{{ vehicle.vin if vehicle else '' }}"></div>
+                <div class="col-md-3"><label class="form-label">Engine Type</label><input type="text" name="engine_type" class="form-control" value="{{ vehicle.engine_type if vehicle else '' }}"></div>
+                <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="3">{{ vehicle.notes if vehicle else '' }}</textarea></div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">{% if vehicle %}Update{% else %}Create{% endif %} Vehicle</button>
+                    <a href="/vehicles" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

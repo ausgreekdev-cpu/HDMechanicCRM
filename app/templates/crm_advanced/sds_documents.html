@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<h4 class="mb-3">SDS Documents</h4>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Part</th><th>Supplier</th><th>File</th><th>Revision</th></tr></thead>
+<tbody>{% for d in docs %}<tr><td>{{ d.part_name or d.part.name if d.part else '' }}</td><td>{{ d.supplier or '' }}</td><td><a href="/attachments/download/{{ d.id }}">{{ d.original_name }}</a></td><td><small>{{ d.revision_date.strftime('%m/%d/%Y') if d.revision_date else '' }}</small></td></tr>{% else %}<tr><td colspan="4" class="text-muted text-center">No SDS documents</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

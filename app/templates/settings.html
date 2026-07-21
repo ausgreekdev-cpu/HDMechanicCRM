@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4"><h4 class="mb-0"><i class="bi bi-gear me-2"></i>Settings</h4></div>
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Profile</strong></div>
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3"><label class="form-label">Username</label><input type="text" class="form-control" value="{{ user.username }}" disabled></div>
+                    <div class="mb-3"><label class="form-label">Display Name</label><input type="text" name="display_name" class="form-control" value="{{ user.display_name or '' }}"></div>
+                    <div class="mb-3"><label class="form-label">Role</label><input type="text" class="form-control" value="{{ user.role }}" disabled></div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header"><strong>Database</strong></div>
+            <div class="card-body">
+                <a href="/backup" class="btn btn-outline-primary btn-sm"><i class="bi bi-download"></i> Download Backup</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>Change Password</strong></div>
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3"><label class="form-label">Current Password</label><input type="password" name="current_password" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label">New Password</label><input type="password" name="new_password" class="form-control" required></div>
+                    <button type="submit" class="btn btn-warning">Update Password</button>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header"><strong>Email / SMS Notifications</strong></div>
+            <div class="card-body">
+                <p class="small text-muted">Configure via environment variables:</p>
+                <ul class="small text-muted mb-0">
+                    <li><code>CRM_SMTP_SERVER</code> — SMTP host</li>
+                    <li><code>CRM_SMTP_PORT</code> — SMTP port (default 587)</li>
+                    <li><code>CRM_SMTP_USERNAME</code> — SMTP username</li>
+                    <li><code>CRM_SMTP_PASSWORD</code> — SMTP password</li>
+                    <li><code>CRM_SMTP_FROM</code> — From address</li>
+                </ul>
+                <hr>
+                <span class="badge bg-{{ 'success' if env.get('CRM_SMTP_SERVER') else 'warning' }}">{{ 'SMTP Configured' if env.get('CRM_SMTP_SERVER') else 'Not Configured' }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

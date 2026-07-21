@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Bank Accounts</h4></div>
+<div class="row g-3">{% for a in accounts %}<div class="col-md-4"><div class="card"><div class="card-body">
+<h5>{{ a.name }}</h5>
+<small class="text-muted">{{ a.account_type }} ****{{ (a.account_number or '')[-4:] }}</small>
+<h3 class="mt-2 {% if a.balance < 0 %}text-danger{% else %}text-success{% endif %}">${{ '%.2f'|format(a.balance) }}</h3>
+<a href="/finance/bank-accounts/{{ a.id }}/transactions" class="btn btn-sm btn-outline-primary">Transactions</a>
+</div></div></div>{% else %}<div class="col-12"><div class="card"><div class="card-body text-muted text-center">No bank accounts</div></div></div>{% endfor %}</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Estimate {{ est.estimate_number }}</h4>
+<div>{% if est.status == 'Draft' %}<form method="POST" action="/ops/estimates/{{ est.id }}/send" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-info">Send to Customer</button></form>{% endif %}
+{% if est.status == 'Sent' %}<form method="POST" action="/ops/estimates/{{ est.id }}/approve" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-success">Approve</button></form>{% endif %}
+{% if est.status == 'Approved' %}<form method="POST" action="/ops/estimates/{{ est.id }}/convert" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-primary">Convert to WO</button></form>{% endif %}
+<a href="/ops/estimates" class="btn btn-sm btn-outline-secondary">Back</a></div></div>
+<div class="row"><div class="col-md-8">
+<div class="card mb-3"><div class="card-body">
+<div class="row mb-2"><div class="col-3 text-muted">Customer</div><div class="col-9">{{ est.customer.name if est.customer else '' }}</div></div>
+<div class="row mb-2"><div class="col-3 text-muted">Vehicle</div><div class="col-9">{{ est.vehicle.make }} {{ est.vehicle.model }} {{ est.vehicle.license_plate or '' }}</div></div>
+<div class="row mb-2"><div class="col-3 text-muted">Created</div><div class="col-9">{{ est.created_at.strftime('%m/%d/%Y') }}</div></div>
+<div class="row mb-2"><div class="col-3 text-muted">Expires</div><div class="col-9">{{ est.expires_at.strftime('%m/%d/%Y') if est.expires_at else 'N/A' }}</div></div>
+<div class="row mb-2"><div class="col-3 text-muted">Status</div><div class="col-9"><span class="badge bg-{{ 'success' if est.status == 'Approved' else 'primary' if est.status == 'Converted' else 'secondary' }}">{{ est.status }}</span></div></div>
+</div></div>
+<div class="card"><div class="card-header"><h6 class="mb-0">Line Items</h6></div>
+<div class="card-body p-0"><table class="table table-sm mb-0">
+<thead><tr><th>Description</th><th class="text-end">Qty</th><th class="text-end">Price</th><th class="text-end">Total</th><th>Type</th></tr></thead>
+<tbody>{% for item in est.items %}<tr><td>{{ item.description }}</td><td class="text-end">{{ item.quantity }}</td><td class="text-end">${{ '%.2f'|format(item.unit_price) }}</td><td class="text-end">${{ '%.2f'|format(item.total_price) }}</td><td>{% if item.is_labor %}<span class="badge bg-info">Labor</span>{% else %}Part{% endif %}</td></tr>{% endfor %}</tbody></table></div></div>
+{% if est.description %}<div class="card mt-2"><div class="card-body"><small>{{ est.description }}</small></div></div>{% endif %}
+</div><div class="col-md-4"><div class="card"><div class="card-body">
+<div class="d-flex justify-content-between mb-2"><span>Parts Total</span><strong>${{ '%.2f'|format(est.parts_total) }}</strong></div>
+<div class="d-flex justify-content-between mb-2"><span>Labor ({{ est.labor_hours }}h)</span><strong>${{ '%.2f'|format(est.labor_hours * est.labor_rate) }}</strong></div>
+<hr><div class="d-flex justify-content-between"><h5>Total</h5><h5>${{ '%.2f'|format(est.total_amount) }}</h5></div>
+{% if est.converted_wo %}<hr><small class="text-muted">Converted to <a href="/work-orders/{{ est.converted_wo.id }}">WO #{{ est.converted_wo.id }}</a></small>{% endif %}
+</div></div></div></div>
+{% endblock %}

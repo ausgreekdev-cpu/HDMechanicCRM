@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Vendor Quotes</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Quote</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Vendor</th><th>Part</th><th>Part #</th><th class="text-end">Qty</th><th class="text-end">Unit Price</th><th class="text-end">Total</th><th>Lead</th><th>Valid Until</th></tr></thead>
+<tbody>{% for q in quotes %}<tr><td>{{ q.vendor.name if q.vendor else '' }}</td><td>{{ q.part_name or q.part.name if q.part else '' }}</td><td>{{ q.part_number or '' }}</td><td class="text-end">{{ q.quantity }}</td><td class="text-end">${{ '%.2f'|format(q.unit_price) }}</td><td class="text-end">${{ '%.2f'|format(q.total_price) }}</td><td>{{ q.lead_days }}d</td><td><small>{{ q.valid_until.strftime('%m/%d/%Y') if q.valid_until else '' }}</small></td></tr>{% else %}<tr><td colspan="8" class="text-muted text-center">No quotes</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

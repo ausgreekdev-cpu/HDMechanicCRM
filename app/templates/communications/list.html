@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Communications Log</h4>
+    <a href="/communications/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Log Communication</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto"><input type="text" name="search" class="form-control form-control-sm search-bar" placeholder="Search subject..." value="{{ search }}"></div>
+            <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-search"></i></button></div>
+            {% if search %}<div class="col-auto"><a href="/communications" class="btn btn-sm btn-outline-secondary">Clear</a></div>{% endif %}
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Date</th><th>Type</th><th>Direction</th><th>Subject</th><th>Customer</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for c in p.rows %}
+                    <tr>
+                        <td><small class="text-muted">{{ c.created_at.strftime('%m/%d/%Y %I:%M %p') }}</small></td>
+                        <td><span class="badge bg-secondary">{{ c.comm_type }}</span></td>
+                        <td>{% if c.direction == 'Inbound' %}<span class="badge bg-info">Inbound</span>{% else %}<span class="badge bg-primary">Outbound</span>{% endif %}</td>
+                        <td class="fw-medium">{{ c.subject[:60] }}</td>
+                        <td>{% if c.customer %}<a href="/customers/{{ c.customer.id }}" class="text-decoration-none">{{ c.customer.name }}</a>{% elif c.lead %}{{ c.lead.name }}{% else %}-{% endif %}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#viewComm{{ c.id }}"><i class="bi bi-eye"></i></button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center py-4 text-muted">No communications logged</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "pagination.html" %}
+    </div>
+</div>
+
+{% for c in p.rows %}
+<div class="modal fade" id="viewComm{{ c.id }}" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">{{ c.subject }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <p class="mb-1"><strong>Type:</strong> {{ c.comm_type }} | <strong>Direction:</strong> {{ c.direction }}</p>
+            <p class="mb-1"><strong>Customer:</strong> {{ c.customer.name if c.customer else 'N/A' }} | <strong>Date:</strong> {{ c.created_at.strftime('%m/%d/%Y %I:%M %p') }}</p>
+            <hr>
+            <p>{{ c.body or 'No details' }}</p>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button></div>
+    </div></div>
+</div>
+{% endfor %}
+{% endblock %}

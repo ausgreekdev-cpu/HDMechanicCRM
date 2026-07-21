@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Non-Stock Items</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Item</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Name</th><th>Supplier</th><th class="text-end">Est. Cost</th><th class="text-end">Sell Price</th><th>Lead Days</th></tr></thead>
+<tbody>{% for n in items %}<tr><td>{{ n.name }}</td><td>{{ n.supplier or '' }}</td><td class="text-end">${{ '%.2f'|format(n.estimated_cost) }}</td><td class="text-end">${{ '%.2f'|format(n.selling_price) }}</td><td>{{ n.lead_days }}d</td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">No items</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

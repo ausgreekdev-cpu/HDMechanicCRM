@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Warranty Claims</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Claim</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>#</th><th>Warranty</th><th>WO</th><th class="text-end">Amount</th><th>Status</th><th>Created</th></tr></thead>
+<tbody>{% for c in claims %}<tr>
+<td>{{ c.claim_number or c.id }}</td><td>#{{ c.warranty_id }}</td><td>{% if c.work_order %}<a href="/work-orders/{{ c.work_order.id }}">#{{ c.work_order.id }}</a>{% endif %}</td>
+<td class="text-end">${{ '%.2f'|format(c.total_claim) }}</td>
+<td><span class="badge bg-{{ 'success' if c.status == 'Approved' else 'warning' if c.status == 'Open' else 'secondary' }}">{{ c.status }}</span></td>
+<td><small>{{ c.created_at.strftime('%m/%d/%Y') }}</small></td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No claims</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="modal fade" id="newModal"><div class="modal-dialog modal-sm"><div class="modal-content">
+<form method="POST" action="/ops/warranty-claims/new"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="modal-header"><h6 class="modal-title">File Warranty Claim</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<div class="mb-2"><label class="form-label">Warranty ID</label><input type="number" name="warranty_id" class="form-control" required></div>
+<div class="mb-2"><label class="form-label">Work Order ID</label><input type="number" name="work_order_id" class="form-control"></div>
+<div class="row mb-2"><div class="col"><label class="form-label">Labor Cost</label><input type="number" step="0.01" name="labor_cost" class="form-control"></div><div class="col"><label class="form-label">Parts Cost</label><input type="number" step="0.01" name="parts_cost" class="form-control"></div></div>
+<div class="mb-2"><label class="form-label">Total</label><input type="number" step="0.01" name="total_claim" class="form-control"></div>
+<div class="mb-2"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+</div><div class="modal-footer"><button type="submit" class="btn btn-primary btn-sm">Submit Claim</button></div></form></div></div></div>
+{% endblock %}

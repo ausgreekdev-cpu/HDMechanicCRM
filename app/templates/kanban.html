@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block content %}
+<h4 class="mb-3">Kanban Board</h4>
+<div class="d-flex overflow-auto gap-2" style="min-height: 70vh;">
+{% for status, items in lanes.items() %}
+<div class="card" style="min-width: 250px; max-width: 250px;"><div class="card-header py-1"><small><strong>{{ status }}</strong> ({{ items|length }})</small></div>
+<div class="card-body p-1" style="overflow-y: auto; max-height: 65vh;" data-status="{{ status }}">
+{% for wo in items %}
+<div class="card mb-1 p-2 bg-light kanban-card" draggable="true" data-wo-id="{{ wo.id }}" style="cursor: grab;">
+<small><strong>{{ wo.title[:40] }}</strong></small>
+<small class="text-muted">{{ wo.customer.name if wo.customer else '' }}</small>
+<small class="text-muted">${{ '%.0f'|format(wo.total_amount) }}</small>
+</div>{% else %}<div class="text-muted text-center py-3"><small>No items</small></div>{% endfor %}
+</div></div>{% endfor %}</div>
+<script>
+document.querySelectorAll('.kanban-card').forEach(function(card) {
+  card.addEventListener('dragstart', function(e) { e.dataTransfer.setData('text/plain', this.dataset.woId); });
+});
+document.querySelectorAll('.card-body[data-status]').forEach(function(col) {
+  col.addEventListener('dragover', function(e) { e.preventDefault(); });
+  col.addEventListener('drop', function(e) {
+    e.preventDefault(); var woId = e.dataTransfer.getData('text/plain'); var status = this.dataset.status;
+    var form = new FormData(); form.append('csrf_token', '{{ csrf_token() }}'); form.append('work_order_id', woId); form.append('status', status);
+    fetch('/kanban/update', {method:'POST', body:form}).then(function(r){return r.json()}).then(function(d){if(d.ok)location.reload()});
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="bi bi-bell me-2"></i>System Alerts
+        {% if unread > 0 %}
+        <span class="badge bg-danger ms-2">{{ unread }} unread</span>
+        {% endif %}
+    </h4>
+</div>
+{% if alerts %}
+<div class="row g-3">
+    {% for severity in ['danger', 'warning', 'info', 'success'] %}
+    {% set group = alerts|selectattr('severity', 'equalto', severity)|list %}
+    {% if group %}
+    <div class="col-12">
+        <h6 class="text-uppercase text-muted mb-2">
+            <i class="bi bi-{% if severity == 'danger' %}exclamation-triangle{% elif severity == 'warning' %}exclamation-circle{% elif severity == 'info' %}info-circle{% else %}check-circle{% endif %} me-1"></i>
+            {{ severity|capitalize }}
+        </h6>
+        {% for a in group %}
+        <div class="card mb-2 border-{{ severity }} {{ 'border-start border-4' if a.severity == 'danger' or a.severity == 'warning' else '' }} {{ 'opacity-75' if not a.unread else '' }}">
+            <div class="card-body py-2 d-flex align-items-start gap-3">
+                <div class="text-{{ severity }} fs-5"><i class="bi bi-{% if severity == 'danger' %}exclamation-triangle-fill{% elif severity == 'warning' %}exclamation-circle-fill{% elif severity == 'info' %}info-circle-fill{% else %}check-circle-fill{% endif %}"></i></div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ a.title }}</strong>
+                            {% if a.unread %}<span class="badge bg-primary ms-1">New</span>{% endif %}
+                        </div>
+                        <small class="text-muted">{{ a.created_at.strftime('%m/%d/%Y %I:%M %p') }}</small>
+                    </div>
+                    <p class="mb-1 small">{{ a.message }}</p>
+                    {% if a.unread %}
+                    <form method="post" action="/alerts/{{ a.id }}/read" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-check2 me-1"></i>Mark Read</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-check2-all fs-1 d-block mb-2"></i>
+        <p class="mb-0">No alerts</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

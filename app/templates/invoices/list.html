@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-receipt me-2"></i>Invoices</h4>
+    <a href="/invoices/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Invoice</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="Unpaid" {% if status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                    <option value="Paid" {% if status == 'Paid' %}selected{% endif %}>Paid</option>
+                </select>
+            </div>
+            <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-search"></i></button></div>
+            {% if status %}<div class="col-auto"><a href="/invoices" class="btn btn-sm btn-outline-secondary">Clear</a></div>{% endif %}
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Invoice #</th><th>Customer</th><th>Work Order</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for inv in p.rows %}
+                    <tr>
+                        <td class="fw-medium"><a href="/invoices/{{ inv.id }}" class="text-decoration-none">{{ inv.invoice_number }}</a></td>
+                        <td>{{ inv.work_order.customer.name if inv.work_order and inv.work_order.customer else 'N/A' }}</td>
+                        <td><a href="/work-orders/{{ inv.work_order.id }}" class="text-decoration-none">{{ inv.work_order.title[:40] if inv.work_order else 'N/A' }}</a></td>
+                        <td>${{ "%.2f"|format(inv.total_amount) }}</td>
+                        <td>{% if inv.status == 'Paid' %}<span class="badge bg-success">Paid</span>{% else %}<span class="badge bg-warning">Unpaid</span>{% endif %}</td>
+                        <td><small class="text-muted">{{ inv.created_at.strftime('%m/%d/%Y') }}</small></td>
+                        <td>
+                            <a href="/invoices/{{ inv.id }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No invoices yet</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "pagination.html" %}
+    </div>
+</div>
+{% endblock %}

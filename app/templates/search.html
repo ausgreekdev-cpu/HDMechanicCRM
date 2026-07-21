@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-0"><i class="bi bi-search me-2"></i>Search</h4>
+</div>
+<form method="get" action="/search" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control form-control-lg" placeholder="Search customers, vehicles, work orders, parts..." value="{{ query }}" autofocus>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+    </div>
+</form>
+{% if query and not results %}
+<p class="text-muted">No results for "{{ query }}"</p>
+{% endif %}
+{% if results %}
+<div class="row g-4">
+    {% if results.customers %}
+    <div class="col-md-6">
+        <div class="card"><div class="card-header"><strong><i class="bi bi-people me-2"></i>Customers</strong></div>
+        <div class="card-body p-0"><table class="table table-hover mb-0">
+            <thead><tr><th>Name</th><th>Phone</th><th>Company</th></tr></thead>
+            <tbody>{% for c in results.customers %}
+                <tr><td><a href="/customers/{{ c.id }}">{{ c.name }}</a></td><td>{{ c.phone or '-' }}</td><td>{{ c.company or '-' }}</td></tr>
+            {% endfor %}</tbody>
+        </table></div></div>
+    </div>
+    {% endif %}
+    {% if results.vehicles %}
+    <div class="col-md-6">
+        <div class="card"><div class="card-header"><strong><i class="bi bi-truck me-2"></i>Vehicles</strong></div>
+        <div class="card-body p-0"><table class="table table-hover mb-0">
+            <thead><tr><th>Vehicle</th><th>VIN</th><th>Plate</th></tr></thead>
+            <tbody>{% for v in results.vehicles %}
+                <tr><td><a href="/vehicles/{{ v.id }}/edit">{{ v.make }} {{ v.model }}</a></td><td>{{ v.vin or '-' }}</td><td>{{ v.license_plate or '-' }}</td></tr>
+            {% endfor %}</tbody>
+        </table></div></div>
+    </div>
+    {% endif %}
+    {% if results.work_orders %}
+    <div class="col-md-6">
+        <div class="card"><div class="card-header"><strong><i class="bi bi-clipboard-check me-2"></i>Work Orders</strong></div>
+        <div class="card-body p-0"><table class="table table-hover mb-0">
+            <thead><tr><th>Title</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>{% for wo in results.work_orders %}
+                <tr><td><a href="/work-orders/{{ wo.id }}">{{ wo.title[:50] }}</a></td><td><span class="badge bg-primary">{{ wo.status }}</span></td><td>{{ wo.created_at.strftime('%m/%d/%Y') }}</td></tr>
+            {% endfor %}</tbody>
+        </table></div></div>
+    </div>
+    {% endif %}
+    {% if results.parts %}
+    <div class="col-md-6">
+        <div class="card"><div class="card-header"><strong><i class="bi bi-box-seam me-2"></i>Parts</strong></div>
+        <div class="card-body p-0"><table class="table table-hover mb-0">
+            <thead><tr><th>Name</th><th>Part #</th><th>Qty</th></tr></thead>
+            <tbody>{% for p in results.parts %}
+                <tr><td><a href="/parts/{{ p.id }}/edit">{{ p.name }}</a></td><td>{{ p.part_number or '-' }}</td><td>{{ p.quantity_on_hand }}</td></tr>
+            {% endfor %}</tbody>
+        </table></div></div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

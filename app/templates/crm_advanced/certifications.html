@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Technician Certifications</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Certification</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Technician</th><th>Certification</th><th>Issuer</th><th>#</th><th>Issued</th><th>Expires</th></tr></thead>
+<tbody>{% for c in certs %}<tr><td>{{ c.technician.name if c.technician else '' }}</td><td>{{ c.name }}</td><td>{{ c.issuer or '' }}</td><td>{{ c.cert_number or '' }}</td><td><small>{{ c.issued_date.strftime('%m/%d/%Y') if c.issued_date else '' }}</small></td><td><small>{{ c.expiry_date.strftime('%m/%d/%Y') if c.expiry_date else '' }}</small></td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No certifications</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

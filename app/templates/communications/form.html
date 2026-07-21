@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-0">Log Communication</h4>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="/communications/new">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Customer</label>
+                    <select name="customer_id" class="form-select">
+                        <option value="0">None</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Lead</label>
+                    <select name="lead_id" class="form-select">
+                        <option value="0">None</option>
+                        {% for l in leads %}
+                        <option value="{{ l.id }}">{{ l.name }} ({{ l.company or 'No company' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Type *</label>
+                    <select name="comm_type" class="form-select" required>
+                        <option value="Phone Call">Phone Call</option>
+                        <option value="Email">Email</option>
+                        <option value="Text Message">Text Message</option>
+                        <option value="In-Person">In-Person</option>
+                        <option value="Note">Note</option>
+                    </select>
+                </div>
+                <div class="col-md-8"><label class="form-label">Subject *</label><input type="text" name="subject" class="form-control" required></div>
+                <div class="col-md-4">
+                    <label class="form-label">Direction</label>
+                    <select name="direction" class="form-select">
+                        <option value="Outbound">Outbound</option>
+                        <option value="Inbound">Inbound</option>
+                    </select>
+                </div>
+                <div class="col-12"><label class="form-label">Details</label><textarea name="body" class="form-control" rows="5"></textarea></div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Log Communication</button>
+                    <a href="/communications" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

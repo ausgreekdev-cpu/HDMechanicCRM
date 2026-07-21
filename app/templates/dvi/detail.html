@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Inspection #{{ insp.id }}</h4>
+    <div>
+        <a href="/dvi/{{ insp.id }}/edit" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
+        <a href="/dvi" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header"><strong>Inspection Details</strong></div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Date:</strong> {{ insp.inspection_date.strftime('%m/%d/%Y') if insp.inspection_date else '-' }}</p>
+                <p class="mb-1"><strong>Vehicle:</strong> <a href="/vehicles/{{ insp.vehicle.id }}" class="text-decoration-none">{{ insp.vehicle.make }} {{ insp.vehicle.model }}</a></p>
+                <p class="mb-1"><strong>Technician:</strong> {{ insp.technician.name }}</p>
+                <p class="mb-1"><strong>Odometer:</strong> {{ insp.odometer or '-' }}</p>
+                <p class="mb-0"><strong>Status:</strong> <span class="badge bg-{% if insp.status == 'Pass' %}success{% elif insp.status == 'Fail' %}danger{% else %}warning{% endif %}">{{ insp.status }}</span></p>
+            </div>
+        </div>
+        {% if insp.work_order_id %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <p class="mb-0"><strong>Work Order:</strong> <a href="/work-orders/{{ insp.work_order.id }}" class="text-decoration-none">{{ insp.work_order.title }}</a></p>
+            </div>
+        </div>
+        {% endif %}
+        {% if insp.summary %}
+        <div class="card mt-3">
+            <div class="card-header"><strong>Summary</strong></div>
+            <div class="card-body"><p class="mb-0">{{ insp.summary }}</p></div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><strong>Inspection Items ({{ insp.items|length }})</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Category</th><th>Item</th><th>Result</th><th>Notes</th></tr></thead>
+                    <tbody>
+                        {% for item in insp.items %}
+                        <tr>
+                            <td>{{ item.category }}</td>
+                            <td>{{ item.check_item }}</td>
+                            <td>
+                                {% if item.result == 'Pass' %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Pass</span>
+                                {% elif item.result == 'Fail' %}
+                                <span class="badge bg-danger"><i class="bi bi-exclamation-circle me-1"></i>Fail</span>
+                                {% elif item.result == 'NA' %}
+                                <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>N/A</span>
+                                {% elif item.result == 'Not Checked' %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-question-circle me-1"></i>Not Checked</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ item.notes or '-' }}</small></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center py-3 text-muted">No inspection items</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

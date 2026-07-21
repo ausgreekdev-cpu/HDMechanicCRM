@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<h4 class="mb-3">Sublet Repairs</h4>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Item</th><th>Supplier</th><th class="text-end">Est. Cost</th><th class="text-end">Sell Price</th><th>Lead Days</th></tr></thead>
+<tbody>{% for i in items %}<tr><td>{{ i.name }}</td><td>{{ i.supplier }}</td><td class="text-end">${{ '%.2f'|format(i.estimated_cost) }}</td><td class="text-end">${{ '%.2f'|format(i.selling_price) }}</td><td>{{ i.lead_days }}d</td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">No sublet items</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

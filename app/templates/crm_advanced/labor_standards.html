@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Labor Standards</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Standard</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Name</th><th>Category</th><th class="text-end">Standard Hours</th><th>Description</th></tr></thead>
+<tbody>{% for s in standards %}<tr><td>{{ s.name }}</td><td><span class="badge bg-secondary">{{ s.category or 'General' }}</span></td><td class="text-end"><strong>{{ s.standard_hours }}h</strong></td><td><small>{{ s.description or '' }}</small></td></tr>{% else %}<tr><td colspan="4" class="text-muted text-center">No labor standards</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

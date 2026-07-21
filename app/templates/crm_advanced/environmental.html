@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Environmental Records</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Record</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Type</th><th>Description</th><th class="text-end">Qty</th><th>Unit</th><th>Method</th><th class="text-end">Cost</th></tr></thead>
+<tbody>{% for r in records %}<tr><td><small>{{ r.date.strftime('%m/%d/%Y') }}</small></td><td><span class="badge bg-secondary">{{ r.record_type }}</span></td><td><small>{{ r.description or '' }}</small></td><td class="text-end">{{ r.quantity }}</td><td>{{ r.unit }}</td><td><small>{{ r.disposal_method or '' }}</small></td><td class="text-end">${{ '%.2f'|format(r.cost) }}</td></tr>{% else %}<tr><td colspan="7" class="text-muted text-center">No records</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

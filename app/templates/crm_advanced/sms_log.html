@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">SMS Log</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#sendModal"><i class="bi bi-send"></i> Send SMS</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Phone</th><th>Message</th><th>Status</th></tr></thead>
+<tbody>{% for s in p.rows %}<tr><td><small>{{ s.created_at.strftime('%m/%d/%Y %I:%M %p') }}</small></td><td>{{ s.phone }}</td><td><small>{{ s.message[:50] }}...</small></td><td><span class="badge bg-success">{{ s.status }}</span></td></tr>{% else %}<tr><td colspan="4" class="text-muted text-center">No messages</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
+<div class="modal fade" id="sendModal"><div class="modal-dialog modal-sm"><div class="modal-content">
+<form method="POST" action="/crm/sms-log/send"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="modal-header"><h6 class="modal-title">Send SMS</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<div class="mb-2"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control" required></div>
+<div class="mb-2"><label class="form-label">Message</label><textarea name="message" class="form-control" rows="3" required></textarea></div>
+</div><div class="modal-footer"><button type="submit" class="btn btn-primary btn-sm">Send</button></div></form></div></div></div>
+{% endblock %}

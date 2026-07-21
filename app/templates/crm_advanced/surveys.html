@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Customer Surveys</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Survey</button></div>
+<div class="row g-3 mb-3"><div class="col-md-4"><div class="card text-center p-3"><h2 class="text-primary">{{ avg_nps }}</h2><small>Avg NPS Score</small></div></div>
+<div class="col-md-4"><div class="card text-center p-3"><h2 class="text-success">{{ avg_rating }} / 10</h2><small>Avg Rating</small></div></div>
+<div class="col-md-4"><div class="card text-center p-3"><h2>{{ surveys|length }}</h2><small>Total Responses</small></div></div></div>
+<div class="card"><div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>Customer</th><th>Rating</th><th>NPS</th><th>Feedback</th><th>Date</th></tr></thead>
+<tbody>{% for s in surveys %}<tr><td>{{ s.customer.name if s.customer else '' }}</td><td>{{ s.rating }}/10</td><td><span class="badge bg-{% if s.nps_score >= 9 %}success{% elif s.nps_score >= 7 %}warning{% else %}danger{% endif %}">{{ s.nps_score }}</span></td><td><small>{{ s.feedback[:60] if s.feedback else '' }}</small></td><td><small>{{ s.created_at.strftime('%m/%d/%Y') }}</small></td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

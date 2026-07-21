@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Fleet Groups</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Group</button></div>
+{% for g in groups %}
+<div class="card mb-3"><div class="card-header d-flex justify-content-between"><strong>{{ g.name }}</strong><small>{{ g.customer.name if g.customer else '' }} — {{ g.billing_cycle }}</small></div>
+<div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>Unit #</th><th>Vehicle</th><th>Driver</th></tr></thead>
+<tbody>{% for fv in g.vehicles %}<tr><td>{{ fv.unit_number or '' }}</td><td>{{ fv.vehicle.make }} {{ fv.vehicle.model }} ({{ fv.vehicle.license_plate or '' }})</td><td>{{ fv.assigned_driver or '' }}</td></tr>{% else %}<tr><td colspan="3" class="text-muted text-center">No vehicles in this group</td></tr>{% endfor %}</tbody></table></div>
+<div class="card-footer"><form method="POST" action="/ops/fleet/{{ g.id }}/add-vehicle" class="row g-1"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="col"><input type="number" name="vehicle_id" class="form-control form-control-sm" placeholder="Vehicle ID" required></div>
+<div class="col"><input type="text" name="unit_number" class="form-control form-control-sm" placeholder="Unit #"></div>
+<div class="col"><button class="btn btn-sm btn-primary">Add Vehicle</button></div></form></div></div>{% else %}<div class="card"><div class="card-body text-muted text-center">No fleet groups</div></div>{% endfor %}
+{% endblock %}

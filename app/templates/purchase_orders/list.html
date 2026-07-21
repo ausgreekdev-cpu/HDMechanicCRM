@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-cart me-2"></i>Purchase Orders</h4>
+    <a href="/purchase-orders/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New PO</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Ordered" {% if status == 'Ordered' %}selected{% endif %}>Ordered</option>
+                    <option value="Partial" {% if status == 'Partial' %}selected{% endif %}>Partial</option>
+                    <option value="Received" {% if status == 'Received' %}selected{% endif %}>Received</option>
+                    <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-funnel"></i></button></div>
+            {% if status %}<div class="col-auto"><a href="/purchase-orders" class="btn btn-sm btn-outline-secondary">View All</a></div>{% endif %}
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>PO#</th><th>Supplier</th><th>Status</th><th>Order Date</th><th>Items</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for po in p.rows %}
+                    <tr>
+                        <td class="fw-medium">{{ po.po_number }}</td>
+                        <td>{{ po.supplier }}</td>
+                        <td><span class="badge bg-{% if po.status == 'Pending' %}warning{% elif po.status == 'Ordered' %}primary{% elif po.status == 'Partial' %}info{% elif po.status == 'Received' %}success{% else %}danger{% endif %}">{{ po.status }}</span></td>
+                        <td><small class="text-muted">{{ po.order_date.strftime('%m/%d/%Y') }}</small></td>
+                        <td><span class="badge bg-secondary">{{ po.items|length }}</span></td>
+                        <td>
+                            <a href="/purchase-orders/{{ po.id }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                            {% if po.status in ('Pending', 'Ordered') %}
+                            <a href="/purchase-orders/{{ po.id }}#receive" class="btn btn-sm btn-outline-success"><i class="bi bi-box-arrow-in-down"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center py-4 text-muted">No purchase orders found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "pagination.html" %}
+    </div>
+</div>
+{% endblock %}

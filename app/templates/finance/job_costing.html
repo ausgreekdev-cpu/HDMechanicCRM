@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block content %}
+<h4 class="mb-3">Job Costing</h4>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>WO #</th><th>Title</th><th class="text-end">Parts</th><th class="text-end">Labor</th><th class="text-end">Expenses</th><th class="text-end">Total Cost</th><th class="text-end">Revenue</th><th class="text-end">Profit</th><th class="text-end">Margin</th></tr></thead>
+<tbody>{% for r in results %}<tr>
+<td><a href="/work-orders/{{ r.wo.id }}">#{{ r.wo.id }}</a></td><td><small>{{ r.wo.title }}</small></td>
+<td class="text-end">${{ '%.0f'|format(r.parts_cost) }}</td><td class="text-end">${{ '%.0f'|format(r.labor_cost) }}</td>
+<td class="text-end">${{ '%.0f'|format(r.expenses) }}</td><td class="text-end">${{ '%.0f'|format(r.total_cost) }}</td>
+<td class="text-end">${{ '%.0f'|format(r.revenue) }}</td>
+<td class="text-end {% if r.profit < 0 %}text-danger{% else %}text-success{% endif %}">${{ '%.0f'|format(r.profit) }}</td>
+<td class="text-end {% if r.margin_pct < 0 %}text-danger{% endif %}">{{ '%.1f'|format(r.margin_pct) }}%</td>
+</tr>{% else %}<tr><td colspan="9" class="text-muted text-center">No completed work orders</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

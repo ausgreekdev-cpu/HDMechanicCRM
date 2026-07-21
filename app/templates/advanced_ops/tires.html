@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Tire Records</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Tire</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Vehicle</th><th>Position</th><th>Brand</th><th>Size</th><th>Serial #</th><th>Installed</th><th>Odometer</th><th>Retreads</th></tr></thead>
+<tbody>{% for t in tires %}<tr><td>{{ t.vehicle.make }} {{ t.vehicle.model }}</td><td>{{ t.position or '' }}</td><td>{{ t.brand or '' }}</td><td>{{ t.size or '' }}</td><td>{{ t.serial_number or '' }}</td><td><small>{{ t.install_date.strftime('%m/%d/%Y') if t.install_date else '' }}</small></td><td>{{ t.install_odometer or '' }}</td><td>{{ t.retread_count }}</td></tr>{% else %}<tr><td colspan="8" class="text-muted text-center">No tire records</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

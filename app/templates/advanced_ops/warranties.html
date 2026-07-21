@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Warranties</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Warranty</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Type</th><th>Entity</th><th>Duration</th><th>Start</th><th>End</th><th></th></tr></thead>
+<tbody>{% for w in warranties %}<tr>
+<td>{{ w.warranty_type }}</td><td>{{ w.entity_type }} #{{ w.entity_id }}</td>
+<td>{% if w.duration_days %}{{ w.duration_days }} days{% endif %}{% if w.duration_miles %} / {{ w.duration_miles }} mi{% endif %}</td>
+<td>{{ w.start_date.strftime('%m/%d/%Y') }}</td><td>{{ w.end_date.strftime('%m/%d/%Y') if w.end_date else 'N/A' }}</td>
+<td><a href="/ops/warranty-claims" class="btn btn-sm btn-outline-info">Claims</a></td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No warranties</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="modal fade" id="newModal"><div class="modal-dialog modal-sm"><div class="modal-content">
+<form method="POST" action="/ops/warranties/new"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="modal-header"><h6 class="modal-title">New Warranty</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<select name="entity_type" class="form-select mb-2"><option>Part</option><option>Labor</option><option>Both</option></select>
+<div class="mb-2"><label class="form-label">Entity ID</label><input type="number" name="entity_id" class="form-control" required></div>
+<div class="row mb-2"><div class="col"><label class="form-label">Duration (days)</label><input type="number" name="duration_days" class="form-control" value="365"></div><div class="col"><label class="form-label">Miles</label><input type="number" name="duration_miles" class="form-control" value="0"></div></div>
+<div class="mb-2"><label class="form-label">Start Date</label><input type="date" name="start_date" class="form-control" required></div>
+<div class="mb-2"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+</div><div class="modal-footer"><button type="submit" class="btn btn-primary btn-sm">Create</button></div></form></div></div></div>
+{% endblock %}

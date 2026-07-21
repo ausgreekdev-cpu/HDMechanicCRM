@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Vendors</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Vendor</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th><th>Type</th><th>Rating</th></tr></thead>
+<tbody>{% for v in vendors %}<tr><td>{{ v.name }}</td><td>{{ v.contact_person or '' }}</td><td>{{ v.phone or '' }}</td><td>{{ v.email or '' }}</td><td>{{ v.vendor_type or '' }}</td><td>{% if v.rating > 0 %}{% for i in range(v.rating) %}★{% endfor %}{% endif %}</td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No vendors</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="modal fade" id="newModal"><div class="modal-dialog modal-sm"><div class="modal-content">
+<form method="POST" action="/ops/vendors/new"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="modal-header"><h6 class="modal-title">New Vendor</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<div class="mb-2"><label class="form-label">Name *</label><input type="text" name="name" class="form-control" required></div>
+<div class="row mb-2"><div class="col"><label class="form-label">Contact</label><input type="text" name="contact_person" class="form-control"></div><div class="col"><label class="form-label">Type</label><input type="text" name="vendor_type" class="form-control"></div></div>
+<div class="row mb-2"><div class="col"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control"></div><div class="col"><label class="form-label">Email</label><input type="email" name="email" class="form-control"></div></div>
+<div class="mb-2"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="2"></textarea></div>
+</div><div class="modal-footer"><button type="submit" class="btn btn-primary btn-sm">Create</button></div></form></div></div></div>
+{% endblock %}

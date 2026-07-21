@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Time Clock</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#clockInModal"><i class="bi bi-clock"></i> Clock In</button></div>
+{% if active %}<div class="alert alert-info py-2"><strong>Active:</strong> {% for t in active %}{{ t.technician.name if t.technician else 'Tech' }} (since {{ t.clock_in.strftime('%I:%M %p') }}) — <form method="POST" action="/crm/time-entries/{{ t.id }}/clock-out" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-warning">Clock Out</button></form> {% endfor %}</div>{% endif %}
+<div class="card"><div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>In</th><th>Out</th><th>Technician</th><th>WO</th><th class="text-end">Hours</th></tr></thead>
+<tbody>{% for t in p.rows %}<tr><td><small>{{ t.clock_in.strftime('%m/%d %I:%M %p') }}</small></td><td><small>{{ t.clock_out.strftime('%m/%d %I:%M %p') if t.clock_out else '' }}</small></td><td>{{ t.technician.name if t.technician else '' }}</td><td>{% if t.work_order %}<a href="/work-orders/{{ t.work_order.id }}">#{{ t.work_order.id }}</a>{% endif %}</td><td class="text-end">{{ t.total_hours }}h</td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">No completed entries</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
+{% endblock %}

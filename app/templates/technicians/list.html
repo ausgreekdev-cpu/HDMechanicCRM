@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-person-wrench me-2"></i>Technicians</h4>
+    <a href="/technicians/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Technician</a>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Specialization</th><th>Rate</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+                    {% for t in p.rows %}
+                <tr>
+                    <td class="fw-medium">{{ t.name }}</td>
+                    <td>{{ t.phone or '-' }}</td>
+                    <td>{{ t.email or '-' }}</td>
+                    <td><small class="text-muted">{{ t.specialization or 'General' }}</small></td>
+                    <td>${{ "%.2f"|format(t.hourly_rate) }}/hr</td>
+                    <td>{% if t.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+                    <td>
+                        <a href="/technicians/{{ t.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                        <form method="post" action="/technicians/{{ t.id }}/delete" class="d-inline" onsubmit="return confirm('Delete?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center py-4 text-muted">No technicians</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "pagination.html" %}
+</div>
+{% endblock %}

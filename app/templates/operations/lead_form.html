@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-0">{% if lead %}Edit Lead{% else %}New Lead{% endif %}</h4>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{% if lead %}/operations/leads/{{ lead.id }}/edit{% else %}/operations/leads/new{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Name *</label><input type="text" name="name" class="form-control" value="{{ lead.name if lead else '' }}" required></div>
+                <div class="col-md-6"><label class="form-label">Company</label><input type="text" name="company" class="form-control" value="{{ lead.company if lead else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control" value="{{ lead.phone if lead else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ lead.email if lead else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Source</label>
+                    <select name="source" class="form-select">
+                        <option value="">Select...</option>
+                        <option value="Website" {% if lead and lead.source == 'Website' %}selected{% endif %}>Website</option>
+                        <option value="Referral" {% if lead and lead.source == 'Referral' %}selected{% endif %}>Referral</option>
+                        <option value="Walk-in" {% if lead and lead.source == 'Walk-in' %}selected{% endif %}>Walk-in</option>
+                        <option value="Phone" {% if lead and lead.source == 'Phone' %}selected{% endif %}>Phone</option>
+                        <option value="Social Media" {% if lead and lead.source == 'Social Media' %}selected{% endif %}>Social Media</option>
+                        <option value="Other" {% if lead and lead.source == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                {% if lead %}
+                <div class="col-md-4"><label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="New" {% if lead.status == 'New' %}selected{% endif %}>New</option>
+                        <option value="Contacted" {% if lead.status == 'Contacted' %}selected{% endif %}>Contacted</option>
+                        <option value="Qualified" {% if lead.status == 'Qualified' %}selected{% endif %}>Qualified</option>
+                        <option value="Proposal" {% if lead.status == 'Proposal' %}selected{% endif %}>Proposal</option>
+                        <option value="Converted" {% if lead.status == 'Converted' %}selected{% endif %}>Converted</option>
+                        <option value="Closed" {% if lead.status == 'Closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-8"><label class="form-label">Interest / Service Needed</label><input type="text" name="interest" class="form-control" value="{{ lead.interest if lead else '' }}"></div>
+                <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="4">{{ lead.notes if lead else '' }}</textarea></div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">{% if lead %}Update{% else %}Create{% endif %} Lead</button>
+                    <a href="/operations/leads" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

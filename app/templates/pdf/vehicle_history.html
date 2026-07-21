@@ -1,0 +1,33 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Vehicle History Report</title>
+<style>body{font-family:DejaVu Sans,sans-serif;font-size:12px;margin:20px}
+table{width:100%;border-collapse:collapse;margin:10px 0}
+th,td{border:1px solid #999;padding:6px;text-align:left}
+th{background:#eee}h3{border-bottom:2px solid #333;padding-bottom:4px}
+.header{text-align:center;margin-bottom:20px}
+.header h1{margin:0;font-size:20px}</style></head>
+<body>
+<div class="header"><h1>Vehicle History Report</h1>
+<p>{{ vehicle.year }} {{ vehicle.make }} {{ vehicle.model }} — VIN: {{ vehicle.vin or 'N/A' }}</p>
+<p>License: {{ vehicle.license_plate or 'N/A' }} | Engine: {{ vehicle.engine_type or 'N/A' }}</p></div>
+{% if wos %}<h3>Work Orders ({{ wos|length }})</h3>
+<table><tr><th>Date</th><th>Title</th><th>Status</th><th>Labor</th><th>Total</th></tr>
+{% for wo in wos %}<tr><td>{{ wo.created_at.strftime('%m/%d/%Y') }}</td><td>{{ wo.title }}</td><td>{{ wo.status }}</td><td>{{ wo.labor_hours }}h</td><td>${{ '%.2f'|format(wo.total_amount) }}</td></tr>{% endfor %}
+</table>{% endif %}
+{% if fuel %}<h3>Fuel Records ({{ fuel|length }})</h3>
+<table><tr><th>Date</th><th>Gallons</th><th>$/Gal</th><th>Total</th><th>Odometer</th></tr>
+{% for f in fuel %}<tr><td>{{ f.fuel_date }}</td><td>{{ f.gallons }}</td><td>${{ '%.2f'|format(f.price_per_gallon) }}</td><td>${{ '%.2f'|format(f.total_cost) }}</td><td>{{ f.odometer or '-' }}</td></tr>{% endfor %}
+</table>{% endif %}
+{% if tires %}<h3>Tire Records ({{ tires|length }})</h3>
+<table><tr><th>Brand</th><th>Size</th><th>Position</th><th>Installed</th><th>Removed</th></tr>
+{% for t in tires %}<tr><td>{{ t.brand or '-' }}</td><td>{{ t.size or '-' }}</td><td>{{ t.position or '-' }}</td><td>{{ t.install_date or '-' }}</td><td>{{ t.removal_date or '-' }}</td></tr>{% endfor %}
+</table>{% endif %}
+{% if emissions %}<h3>Emission Records ({{ emissions|length }})</h3>
+<table><tr><th>Date</th><th>Type</th><th>Cost</th><th>Next Due</th></tr>
+{% for e in emissions %}<tr><td>{{ e.service_date }}</td><td>{{ e.record_type }}</td><td>${{ '%.2f'|format(e.cost) }}</td><td>{{ e.next_due_date or '-' }}</td></tr>{% endfor %}
+</table>{% endif %}
+{% if dot %}<h3>DOT Inspections ({{ dot|length }})</h3>
+<table><tr><th>Date</th><th>Type</th><th>Result</th><th>Inspector</th></tr>
+{% for d in dot %}<tr><td>{{ d.inspection_date }}</td><td>{{ d.inspection_type or '-' }}</td><td>{{ d.result }}</td><td>{{ d.inspector or '-' }}</td></tr>{% endfor %}
+</table>{% endif %}
+<p style="margin-top:30px;text-align:center;color:#999;font-size:10px">Generated {{ datetime.now().strftime('%m/%d/%Y %H:%M') }}</p>
+</body></html>

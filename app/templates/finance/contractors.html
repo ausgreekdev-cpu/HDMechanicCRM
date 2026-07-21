@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">1099 Contractors</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> Add Contractor</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Name</th><th>Tax ID</th><th>Phone</th><th>Email</th><th class="text-end">Paid YTD</th><th>Status</th></tr></thead>
+<tbody>{% for c in contractors %}<tr><td>{{ c.name }}</td><td>{{ c.tax_id or '' }}</td><td>{{ c.phone or '' }}</td><td>{{ c.email or '' }}</td><td class="text-end">${{ '%.2f'|format(c.total_paid_ytd) }}</td><td>{% if c.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No contractors</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

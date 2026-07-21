@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-0">{% if vendor %}Edit Vendor{% else %}New Vendor{% endif %}</h4>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{% if vendor %}/scrap/vendors/{{ vendor.id }}/edit{% else %}/scrap/vendors/new{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Name *</label><input type="text" name="name" class="form-control" value="{{ vendor.name if vendor else '' }}" required></div>
+                <div class="col-md-6"><label class="form-label">Contact Person</label><input type="text" name="contact_person" class="form-control" value="{{ vendor.contact_person if vendor else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control" value="{{ vendor.phone if vendor else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ vendor.email if vendor else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Address</label><input type="text" name="address" class="form-control" value="{{ vendor.address if vendor else '' }}"></div>
+                <div class="col-md-6"><label class="form-label">Material Types</label><input type="text" name="material_types" class="form-control" value="{{ vendor.material_types if vendor else '' }}" placeholder="e.g. Copper, Steel, Aluminum"></div>
+                <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="3">{{ vendor.notes if vendor else '' }}</textarea></div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">{% if vendor %}Update{% else %}Create{% endif %} Vendor</button>
+                    <a href="/scrap/vendors" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

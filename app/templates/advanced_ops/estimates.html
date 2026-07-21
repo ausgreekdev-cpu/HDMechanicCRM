@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Estimates</h4><a href="/ops/estimates/new" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> New Estimate</a></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>#</th><th>Title</th><th>Customer</th><th class="text-end">Amount</th><th>Status</th><th>Created</th><th></th></tr></thead>
+<tbody>{% for e in p.rows %}
+<tr><td>{{ e.estimate_number }}</td><td><a href="/ops/estimates/{{ e.id }}">{{ e.title }}</a></td><td>{{ e.customer.name if e.customer else '' }}</td>
+<td class="text-end">${{ '%.2f'|format(e.total_amount) }}</td>
+<td>{% if e.status == 'Approved' %}<span class="badge bg-success">Approved</span>{% elif e.status == 'Converted' %}<span class="badge bg-primary">Converted</span>{% elif e.status == 'Sent' %}<span class="badge bg-info">Sent</span>{% else %}<span class="badge bg-secondary">{{ e.status }}</span>{% endif %}</td>
+<td><small>{{ e.created_at.strftime('%m/%d/%Y') }}</small></td>
+<td>{% if e.status == 'Draft' %}<form method="POST" action="/ops/estimates/{{ e.id }}/send" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-info">Send</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="text-muted text-center">No estimates</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
+{% endblock %}

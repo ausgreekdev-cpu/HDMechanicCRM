@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Customer Loyalty</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> Assign Tier</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Customer</th><th>Tier</th><th class="text-end">Points</th><th class="text-end">Discount</th></tr></thead>
+<tbody>{% for t in tiers %}<tr><td>{{ t.customer.name if t.customer else '' }}</td><td><span class="badge bg-{{ 'danger' if t.tier == 'Gold' else 'secondary' if t.tier == 'Standard' else 'primary' }}">{{ t.tier }}</span></td><td class="text-end">{{ t.points }}</td><td class="text-end">{{ t.discount_pct }}%</td></tr>{% else %}<tr><td colspan="4" class="text-muted text-center">No loyalty tiers</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

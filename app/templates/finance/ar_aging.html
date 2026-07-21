@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block content %}
+<h4 class="mb-3">AR Aging Report</h4>
+<div class="row g-3">{% set buckets = {'0-30': 'warning', '31-60': 'warning', '61-90': 'danger', '90+': 'danger'} %}
+{% for bucket, rows in aging.items() %}
+<div class="col-md-3"><div class="card h-100"><div class="card-header d-flex justify-content-between"><strong>{{ bucket }} Days</strong><strong>${{ '%.2f'|format(totals[bucket]) }}</strong></div>
+<div class="card-body p-0"><table class="table table-sm mb-0"><thead><tr><th>Customer</th><th class="text-end">Due</th></tr></thead>
+<tbody>{% for r in rows %}<tr><td><small>{{ r.customer }}</small></td><td class="text-end"><small>${{ '%.2f'|format(r.due) }}</small></td></tr>{% else %}<tr><td colspan="2" class="text-muted text-center"><small>Clear</small></td></tr>{% endfor %}</tbody></table></div></div></div>{% endfor %}</div>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Reports</h4>
+    <small class="text-muted">{{ month }}</small>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-success"><i class="bi bi-currency-dollar"></i></div>
+            <h3 class="mb-0">${{ "%.0f"|format(revenue) }}</h3>
+            <small class="text-muted">Service Revenue (MTD)</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-secondary"><i class="bi bi-truck-flatbed"></i></div>
+            <h3 class="mb-0">${{ "%.0f"|format(scrap_revenue) }}</h3>
+            <small class="text-muted">Scrap Revenue (MTD)</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-danger"><i class="bi bi-receipt"></i></div>
+            <h3 class="mb-0">{{ open_invoices }}</h3>
+            <small class="text-muted">Open Invoices (${{ "%.0f"|format(open_invoices_total) }})</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-warning"><i class="bi bi-exclamation-triangle"></i></div>
+            <h3 class="mb-0">{{ parts_low_stock }}</h3>
+            <small class="text-muted">Low Stock Items</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong><i class="bi bi-pie-chart me-2"></i>Work Orders by Status</strong></div>
+            <div class="card-body">
+                {% if wo_by_status %}
+                {% set colors = {'New': 'info', 'Diagnosing': 'warning', 'Waiting Parts': 'danger', 'In Progress': 'primary', 'Completed': 'success', 'Invoiced': 'secondary', 'Cancelled': 'dark'} %}
+                {% set total_wo = wo_by_status|sum(attribute='1') %}
+                {% for status, count in wo_by_status %}
+                {% set pct = (count / total_wo * 100) if total_wo > 0 else 0 %}
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between small">
+                        <span>{{ status }}</span>
+                        <span>{{ count }} ({{ "%.0f"|format(pct) }}%)</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-{{ colors.get(status, 'secondary') }}" style="width: {{ pct }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center mb-0">No work order data</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header"><strong><i class="bi bi-download me-2"></i>Export Data</strong></div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="/export/customers" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Customers</a>
+                    <a href="/export/parts" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Parts</a>
+                    <a href="/export/work-orders" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Work Orders</a>
+                    <a href="/export/scrap-pickups" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Scrap Pickups</a>
+                    <a href="/export/invoices" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Invoices</a>
+                </div>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header"><strong><i class="bi bi-bar-chart-steps me-2"></i>Advanced Reports</strong></div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="/reports/technician-efficiency" class="btn btn-sm btn-outline-info"><i class="bi bi-person-wrench me-1"></i>Technician Efficiency</a>
+                    <a href="/reports/parts-forecast" class="btn btn-sm btn-outline-info"><i class="bi bi-graph-up me-1"></i>Parts Forecast</a>
+                    <a href="/export/quickbooks" class="btn btn-sm btn-outline-success"><i class="bi bi-currency-dollar me-1"></i>QuickBooks Export</a>
+                </div>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header"><strong><i class="bi bi-upload me-2"></i>Import Data</strong></div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    {% for entity in ['customers', 'parts', 'leads', 'technicians'] %}
+                    <form method="POST" action="/import/{{ entity }}" enctype="multipart/form-data" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="input-group input-group-sm">
+                            <input type="file" name="file" class="form-control form-control-sm" accept=".csv" required>
+                            <button class="btn btn-outline-secondary btn-sm" type="submit">{{ entity|capitalize }}</button>
+                        </div>
+                    </form>
+                    {% endfor %}
+                </div>
+                <small class="text-muted d-block mt-2">CSV files with matching column headers</small>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header"><strong><i class="bi bi-currency-dollar me-2"></i>QuickBooks Sync</strong></div>
+            <div class="card-body">
+                <form method="POST" action="/export/quickbooks-import" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="input-group input-group-sm">
+                        <input type="file" name="file" class="form-control form-control-sm" accept=".csv" required>
+                        <button class="btn btn-outline-success btn-sm" type="submit">Import Paid Invoices</button>
+                    </div>
+                    <small class="text-muted">CSV with headers: Invoice #, Date Paid, Customer Name</small>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong><i class="bi bi-people me-2"></i>Recent Customers</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Name</th><th>Company</th><th>Joined</th></tr></thead>
+                    <tbody>
+                        {% for c in recent_customers %}
+                        <tr>
+                            <td><a href="/customers/{{ c.id }}" class="text-decoration-none">{{ c.name }}</a></td>
+                            <td>{{ c.company or '-' }}</td>
+                            <td><small class="text-muted">{{ c.created_at.strftime('%m/%d/%Y') }}</small></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center py-3 text-muted">No customers yet</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

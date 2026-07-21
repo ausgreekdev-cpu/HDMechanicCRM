@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-0">{% if inspection %}Edit Inspection{% else %}New Vehicle Inspection{% endif %}</h4>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{% if inspection %}/dvi/{{ inspection.id }}/edit{% else %}/dvi/new{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Vehicle *</label>
+                    <select name="vehicle_id" class="form-select" required>
+                        <option value="">Select...</option>
+                        {% for v in vehicles %}
+                        <option value="{{ v.id }}" {% if inspection and inspection.vehicle_id == v.id %}selected{% endif %}>{{ v.make }} {{ v.model }} ({{ v.license_plate or 'no plate' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Work Order (optional)</label>
+                    <select name="work_order_id" class="form-select">
+                        <option value="">None</option>
+                        {% for wo in work_orders %}
+                        <option value="{{ wo.id }}" {% if inspection and inspection.work_order_id == wo.id %}selected{% endif %}>{{ wo.title[:50] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Technician *</label>
+                    <select name="technician_id" class="form-select" required>
+                        <option value="">Select...</option>
+                        {% for t in technicians %}
+                        <option value="{{ t.id }}" {% if inspection and inspection.technician_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3"><label class="form-label">Odometer</label><input type="number" name="odometer" class="form-control" value="{{ inspection.odometer if inspection else '' }}"></div>
+                <div class="col-md-3"><label class="form-label">Inspection Date</label><input type="date" name="inspection_date" class="form-control" value="{{ inspection.inspection_date.strftime('%Y-%m-%d') if inspection else '' }}"></div>
+                <div class="col-12"><label class="form-label">Summary</label><textarea name="summary" class="form-control" rows="2">{{ inspection.summary if inspection else '' }}</textarea></div>
+            </div>
+
+            <h6 class="fw-bold mb-2">Inspection Checklist</h6>
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered table-hover">
+                    <thead><tr><th>Category</th><th>Item</th><th>Result</th><th>Notes</th></tr></thead>
+                    <tbody>
+                        {% for cat, item_name in items %}
+                        <tr>
+                            <td>{{ cat }}</td>
+                            <td>{{ item_name }}</td>
+                            <td>
+                                <input type="hidden" name="category[]" value="{{ cat }}">
+                                <input type="hidden" name="item[]" value="{{ item_name }}">
+                                <select name="result[]" class="form-select form-select-sm">
+                                    <option value="">--</option>
+                                    <option value="Pass" {% if existing and existing.get(item_name) and existing[item_name].result == 'Pass' %}selected{% endif %}>Pass</option>
+                                    <option value="Fail" {% if existing and existing.get(item_name) and existing[item_name].result == 'Fail' %}selected{% endif %}>Fail</option>
+                                    <option value="NA" {% if existing and existing.get(item_name) and existing[item_name].result == 'NA' %}selected{% endif %}>N/A</option>
+                                    <option value="Not Checked" {% if existing and existing.get(item_name) and existing[item_name].result == 'Not Checked' %}selected{% endif %}>Not Checked</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="notes[]" class="form-control form-control-sm" placeholder="Optional notes" value="{{ existing[item_name].notes if existing and existing.get(item_name) else '' }}"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">{% if inspection %}Update{% else %}Create{% endif %} Inspection</button>
+                <a href="/dvi" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

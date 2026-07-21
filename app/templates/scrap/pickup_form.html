@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-0">{% if pickup %}Edit Pickup{% else %}New Scrap Pickup{% endif %}</h4>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{% if pickup %}/scrap/pickups/{{ pickup.id }}/edit{% else %}/scrap/pickups/new{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Vendor *</label>
+                    <select name="vendor_id" class="form-select" required>
+                        <option value="">Select...</option>
+                        {% for v in vendors %}
+                        <option value="{{ v.id }}" {% if pickup and pickup.vendor_id == v.id %}selected{% endif %}>{{ v.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3"><label class="form-label">Date *</label><input type="date" name="pickup_date" class="form-control" value="{% if pickup %}{{ pickup.pickup_date.strftime('%Y-%m-%d') }}{% else %}{{ '' }}{% endif %}" required></div>
+                <div class="col-md-3"><label class="form-label">Material Type *</label><input type="text" name="material_type" class="form-control" value="{{ pickup.material_type if pickup else '' }}" required></div>
+                <div class="col-md-4"><label class="form-label">Weight (kg) *</label><input type="number" step="0.1" name="weight_kg" class="form-control" value="{{ pickup.weight_kg if pickup else '' }}" required></div>
+                <div class="col-md-4"><label class="form-label">Price per kg ($)</label><input type="number" step="0.01" name="price_per_kg" class="form-control" value="{{ pickup.price_per_kg if pickup else '0' }}"></div>
+                <div class="col-md-4"><label class="form-label">Location</label><input type="text" name="location" class="form-control" value="{{ pickup.location if pickup else '' }}"></div>
+                <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2">{{ pickup.notes if pickup else '' }}</textarea></div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">{% if pickup %}Update{% else %}Create{% endif %} Pickup</button>
+                    <a href="/scrap/pickups" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Parts Inventory</h4>
+    <div>
+        <a href="/parts/reorder-suggestions" class="btn btn-outline-warning btn-sm me-1"><i class="bi bi-cart-plus"></i> Reorder</a>
+        <a href="/parts/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Part</a>
+    </div>
+</div>
+{% if reorder %}
+<div class="alert alert-warning py-2 mb-3">Showing parts needing reorder. <a href="/parts/reorder-suggestions" class="alert-link">View suggestions</a></div>
+{% endif %}
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto"><input type="text" name="search" class="form-control form-control-sm" placeholder="Search name, number, barcode, supplier..." value="{{ search }}"></div>
+            <div class="col-auto">
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" name="low_stock" value="1" id="lowStock" onchange="this.form.submit()" {% if low_stock %}checked{% endif %}>
+                    <label class="form-check-label" for="lowStock">Low stock</label>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" name="reorder" value="1" id="reorderCheck" onchange="this.form.submit()" {% if reorder %}checked{% endif %}>
+                    <label class="form-check-label" for="reorderCheck">Needs reorder</label>
+                </div>
+            </div>
+            <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-search"></i></button></div>
+            {% if search or low_stock or reorder %}<div class="col-auto"><a href="/parts" class="btn btn-sm btn-outline-secondary">Clear</a></div>{% endif %}
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Name</th><th>Part #</th><th>Barcode</th><th>Supplier</th><th>In Stock</th><th>Min</th><th>Max</th><th>Cost</th><th>Sell</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for part in p.rows %}
+                    <tr class="{% if part.quantity_on_hand <= part.min_quantity %}table-warning{% endif %}">
+                        <td class="fw-medium">{{ part.name }}</td>
+                        <td><small class="text-muted">{{ part.part_number or '-' }}</small></td>
+                        <td><small class="text-muted">{{ part.barcode or '-' }}</small></td>
+                        <td>{{ part.supplier or '-' }}</td>
+                        <td><span class="badge bg-{% if part.quantity_on_hand <= 0 %}danger{% elif part.quantity_on_hand <= part.min_quantity %}warning{% else %}success{% endif %}">{{ part.quantity_on_hand }}</span></td>
+                        <td>{{ part.min_quantity }}</td>
+                        <td>{{ part.max_quantity if part.max_quantity else '-' }}</td>
+                        <td>${{ "%.2f"|format(part.cost_price) }}</td>
+                        <td>${{ "%.2f"|format(part.selling_price) }}</td>
+                        <td>
+                            <a href="/parts/{{ part.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#adjustModal{{ part.id }}"><i class="bi bi-plus-minus"></i></button>
+                            <form method="post" action="/parts/{{ part.id }}/delete" class="d-inline" onsubmit="return confirm('Delete?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="10" class="text-center py-4 text-muted">No parts found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "pagination.html" %}
+    </div>
+</div>
+
+{% for part in p.rows %}
+<div class="modal fade" id="adjustModal{{ part.id }}" tabindex="-1">
+    <div class="modal-dialog modal-sm"><div class="modal-content">
+        <form method="post" action="/parts/{{ part.id }}/adjust">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header"><h6 class="modal-title">Adjust Stock: {{ part.name }}</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p class="small text-muted">Current: {{ part.quantity_on_hand }}</p>
+                <div class="mb-2"><label class="form-label">Quantity Change</label><input type="number" name="quantity_change" class="form-control" required></div>
+                <div class="mb-2"><label class="form-label">Type</label><select name="transaction_type" class="form-select"><option value="Receive">Receive</option><option value="Used">Used</option><option value="Adjustment">Adjustment</option><option value="Return">Return</option></select></div>
+                <div class="mb-2"><label class="form-label">Reference</label><input type="text" name="reference" class="form-control"></div>
+                <div><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+{% endfor %}
+{% endblock %}

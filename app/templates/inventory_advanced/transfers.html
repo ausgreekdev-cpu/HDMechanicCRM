@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Inventory Transfers</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Transfer</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Part</th><th>From</th><th>→ To</th><th class="text-end">Qty</th></tr></thead>
+<tbody>{% for t in transfers %}<tr><td><small>{{ t.created_at.strftime('%m/%d/%Y') }}</small></td><td>{{ t.part.name if t.part else '' }}</td><td>{{ t.from_warehouse }}</td><td>{{ t.to_warehouse }}</td><td class="text-end">{{ t.quantity }}</td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">No transfers</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

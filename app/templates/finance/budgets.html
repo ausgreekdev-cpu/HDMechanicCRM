@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Budget — {{ year }}</h4><div><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> Add Budget Item</button></div></div>
+<div class="row g-3 mb-3"><div class="col-md-4"><div class="card text-center p-3"><h3 class="text-success">${{ '%.0f'|format(revenue) }}</h3><small>Actual Revenue</small></div></div>
+<div class="col-md-4"><div class="card text-center p-3"><h3 class="text-danger">${{ '%.0f'|format(expenses) }}</h3><small>Actual Expenses</small></div></div>
+<div class="col-md-4"><div class="card text-center p-3"><h3>${{ '%.0f'|format(revenue - expenses) }}</h3><small>Net</small></div></div></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Category</th><th class="text-end">Budgeted</th></tr></thead>
+<tbody>{% for b in budgets %}<tr><td>{{ b.category or 'Uncategorized' }}{% if b.month %} ({{ b.month }}){% endif %}</td><td class="text-end">${{ '%.2f'|format(b.budgeted_amount) }}</td></tr>{% else %}<tr><td colspan="2" class="text-muted text-center">No budget entries</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

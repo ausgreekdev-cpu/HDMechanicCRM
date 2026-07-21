@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Statement — {{ customer.name }}</h4><a href="/finance/customer-statements" class="btn btn-outline-secondary btn-sm">Back</a></div>
+<div class="card"><div class="card-body">
+<p><strong>{{ customer.company or '' }}</strong><br>{{ customer.address or '' }}<br>{{ customer.phone or '' }} — {{ customer.email or '' }}</p>
+<hr>
+<table class="table table-sm"><thead><tr><th>Invoice #</th><th>Date</th><th class="text-end">Total</th><th class="text-end">Paid</th><th class="text-end">Due</th></tr></thead>
+<tbody>{% for inv in invoices %}<tr><td>{{ inv.invoice_number }}</td><td>{{ inv.created_at.strftime('%m/%d/%Y') }}</td><td class="text-end">${{ '%.2f'|format(inv.total_amount) }}</td><td class="text-end">${{ '%.2f'|format(inv.amount_paid) }}</td><td class="text-end text-danger fw-bold">${{ '%.2f'|format(inv.total_amount - inv.amount_paid) }}</td></tr>{% endfor %}</tbody>
+<tfoot><tr class="fw-bold"><td colspan="4" class="text-end">Total Due:</td><td class="text-end text-danger">${{ '%.2f'|format(total_due) }}</td></tr></tfoot></table>
+</div></div>
+{% endblock %}

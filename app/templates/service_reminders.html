@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-clock-history me-2"></i>Service Reminders</h4>
+    <a href="#add-reminder" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Reminder</a>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Service Type</th>
+                        <th>Interval</th>
+                        <th>Last Service</th>
+                        <th>Next Due</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reminders %}
+                    <tr>
+                        <td class="fw-medium">{% if r.vehicle %}{{ r.vehicle.make }} {{ r.vehicle.model }} ({{ r.vehicle.year }}){% else %}{{ r.vehicle_id }}{% endif %}</td>
+                        <td>{{ r.service_type }}</td>
+                        <td>
+                            {% if r.interval_miles %}<span class="badge bg-secondary me-1">{{ r.interval_miles }} mi</span>{% endif %}
+                            {% if r.interval_days %}<span class="badge bg-secondary">{{ r.interval_days }} days</span>{% endif %}
+                            {% if not r.interval_miles and not r.interval_days %}-{% endif %}
+                        </td>
+                        <td>
+                            {% if r.last_odometer %}<small>{{ r.last_odometer }} mi</small><br>{% endif %}
+                            {% if r.last_service_date %}<small class="text-muted">{{ r.last_service_date.strftime('%m/%d/%Y') }}</small>{% endif %}
+                            {% if not r.last_odometer and not r.last_service_date %}-{% endif %}
+                        </td>
+                        <td>
+                            {% if r.next_due_miles %}<span class="badge bg-info">{{ r.next_due_miles }} mi</span><br>{% endif %}
+                            {% if r.next_due_date %}<small>{{ r.next_due_date.strftime('%m/%d/%Y') }}</small>{% endif %}
+                            {% if not r.next_due_miles and not r.next_due_date %}-{% endif %}
+                        </td>
+                        <td>
+                            {% set overdue = r.next_due_date and r.next_due_date < now() %}
+                            {% if overdue %}
+                            <span class="badge bg-danger">Overdue</span>
+                            {% elif r.next_due_miles and r.vehicle and r.vehicle.odometer and r.next_due_miles <= r.vehicle.odometer %}
+                            <span class="badge bg-warning text-dark">Due</span>
+                            {% else %}
+                            <span class="badge bg-success">OK</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="/service-reminders/{{ r.id }}/delete" class="d-inline" onsubmit="return confirm('Delete this reminder?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No service reminders</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4" id="add-reminder">
+    <div class="card-header"><strong><i class="bi bi-plus-circle me-1"></i>Add Service Reminder</strong></div>
+    <div class="card-body">
+        <form method="post" action="/service-reminders/new">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Vehicle</label>
+                    <select name="vehicle_id" class="form-select" required>
+                        <option value="">Select vehicle...</option>
+                        {% for v in vehicles %}
+                        <option value="{{ v.id }}">{{ v.make }} {{ v.model }} ({{ v.year }}) - {{ v.license_plate or 'No plate' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Service Type</label>
+                    <input type="text" name="service_type" class="form-control" placeholder="e.g. Oil Change" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Interval Miles</label>
+                    <input type="number" name="interval_miles" class="form-control" placeholder="3000">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Interval Days</label>
+                    <input type="number" name="interval_days" class="form-control" placeholder="90">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Last Odometer</label>
+                    <input type="number" name="last_odometer" class="form-control" placeholder="Miles">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Last Service Date</label>
+                    <input type="date" name="last_service_date" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Next Due Miles</label>
+                    <input type="number" name="next_due_miles" class="form-control" placeholder="Miles">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Next Due Date</label>
+                    <input type="date" name="next_due_date" class="form-control">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-floppy me-1"></i>Save Reminder</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Supplier Scorecards</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Scorecard</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Supplier</th><th>Date</th><th class="text-end">On-Time %</th><th class="text-end">Quality</th><th class="text-end">Pricing</th><th class="text-end">Overall</th></tr></thead>
+<tbody>{% for s in cards %}<tr><td>{{ s.supplier_name }}</td><td><small>{{ s.rating_date.strftime('%m/%d/%Y') }}</small></td>
+<td class="text-end">{{ '%.0f'|format(s.on_time_delivery_pct) }}%</td><td class="text-end">{{ '%.0f'|format(s.quality_rating) }}%</td>
+<td class="text-end">{{ '%.0f'|format(s.pricing_rating) }}%</td>
+<td class="text-end"><strong>{{ '%.0f'|format(s.overall_score) }}%</strong></td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No scorecards</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

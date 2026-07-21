@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-person-wrench me-2"></i>Technician Efficiency Report</h4>
+</div>
+<div class="row g-4">
+    {% set grand_wo = namespace(count=0) %}
+    {% set grand_hrs = namespace(count=0) %}
+    {% set grand_earn = namespace(count=0) %}
+    {% for t in techs %}
+    {% set grand_wo.count = grand_wo.count + (t.wo_count or 0) %}
+    {% set grand_hrs.count = grand_hrs.count + (t.total_hours or 0) %}
+    {% set grand_earn.count = grand_earn.count + (t.earned or 0) %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                        <i class="bi bi-person-badge fs-4 text-primary"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">{{ t.name }}</h5>
+                        <small class="text-muted">{{ t.specialization or 'General' }}</small>
+                    </div>
+                    <div class="ms-auto">
+                        <span class="badge bg-info fs-6">${{ "%.2f"|format(t.hourly_rate or 0) }}/hr</span>
+                    </div>
+                </div>
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th class="text-end">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Work Orders Completed</td>
+                            <td class="text-end fw-medium">{{ t.wo_count or 0 }}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Labor Hours</td>
+                            <td class="text-end fw-medium">{{ "%.1f"|format(t.total_hours or 0) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Revenue Earned</td>
+                            <td class="text-end fw-medium text-success">${{ "%.2f"|format(t.earned or 0) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="card mt-4 bg-dark text-white">
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h6 class="text-secondary">Total Work Orders</h6>
+                <h3 class="mb-0">{{ grand_wo.count }}</h3>
+            </div>
+            <div class="col-md-4">
+                <h6 class="text-secondary">Total Labor Hours</h6>
+                <h3 class="mb-0">{{ "%.1f"|format(grand_hrs.count) }}</h3>
+            </div>
+            <div class="col-md-4">
+                <h6 class="text-secondary">Total Revenue</h6>
+                <h3 class="mb-0 text-success">${{ "%.2f"|format(grand_earn.count) }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

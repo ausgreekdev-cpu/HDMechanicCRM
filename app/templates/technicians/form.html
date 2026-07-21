@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-0">{% if technician %}Edit Technician{% else %}New Technician{% endif %}</h4>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{% if technician %}/technicians/{{ technician.id }}/edit{% else %}/technicians/new{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Name *</label><input type="text" name="name" class="form-control" value="{{ technician.name if technician else '' }}" required></div>
+                <div class="col-md-6"><label class="form-label">Specialization</label><input type="text" name="specialization" class="form-control" value="{{ technician.specialization if technician else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control" value="{{ technician.phone if technician else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ technician.email if technician else '' }}"></div>
+                <div class="col-md-4"><label class="form-label">Hourly Rate ($)</label><input type="number" step="1" name="hourly_rate" class="form-control" value="{{ technician.hourly_rate if technician else '0' }}"></div>
+                {% if technician %}
+                <div class="col-12">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="isActive" {% if technician.is_active %}checked{% endif %} value="true">
+                        <label class="form-check-label" for="isActive">Active</label>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">{% if technician %}Update{% else %}Create{% endif %} Technician</button>
+                    <a href="/technicians" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

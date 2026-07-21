@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h4>
+    <small class="text-muted" id="current-date"></small>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-primary"><i class="bi bi-people"></i></div>
+            <h3 class="mb-0">{{ stats.total_customers }}</h3>
+            <small class="text-muted">Customers</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-warning"><i class="bi bi-truck"></i></div>
+            <h3 class="mb-0">{{ stats.total_vehicles }}</h3>
+            <small class="text-muted">Vehicles</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-danger"><i class="bi bi-clipboard-check"></i></div>
+            <h3 class="mb-0">{{ stats.active_work_orders }}</h3>
+            <small class="text-muted">Active Work Orders</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-success"><i class="bi bi-check-circle"></i></div>
+            <h3 class="mb-0">{{ stats.completed_this_month }}</h3>
+            <small class="text-muted">Completed This Month</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-info"><i class="bi bi-box-seam"></i></div>
+            <h3 class="mb-0">{{ stats.low_stock_parts }}</h3>
+            <small class="text-muted">Low Stock Items</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-secondary"><i class="bi bi-truck-flatbed"></i></div>
+            <h3 class="mb-0">{{ stats.scrap_pickups_month }}</h3>
+            <small class="text-muted">Pickups This Month</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-warning"><i class="bi bi-funnel"></i></div>
+            <h3 class="mb-0">{{ stats.open_leads }}</h3>
+            <small class="text-muted">Open Leads</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-success"><i class="bi bi-currency-dollar"></i></div>
+            <h3 class="mb-0">{{ "%.0f"|format(stats.total_scrap_value) }}</h3>
+            <small class="text-muted">Scrap Value ($)</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-warning"><i class="bi bi-bell"></i></div>
+            <h3 class="mb-0">{{ alerts|length }}</h3>
+            <small class="text-muted">Active Alerts</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4"><div class="card"><div class="card-header"><strong><i class="bi bi-graph-up me-2"></i>Revenue Trend</strong></div><div class="card-body"><canvas id="revenueChart" height="150"></canvas></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-header"><strong><i class="bi bi-pie-chart me-2"></i>Work Orders</strong></div><div class="card-body"><canvas id="statusChart" height="150"></canvas></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-header"><strong><i class="bi bi-cash-stack me-2"></i>Scrap Payouts</strong></div><div class="card-body"><canvas id="scrapChart" height="150"></canvas></div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-clipboard me-2"></i>Recent Work Orders</strong>
+                <a href="/work-orders" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Title</th><th>Status</th><th>Date</th></tr></thead>
+                    <tbody>
+                        {% for wo in recent_work_orders %}
+                        <tr>
+                            <td><a href="/work-orders/{{ wo.id }}" class="text-decoration-none">{{ wo.title[:50] }}</a></td>
+                            <td><span class="badge bg-{% if wo.status == 'Completed' %}success{% elif wo.status == 'In Progress' %}primary{% elif wo.status == 'New' %}info{% else %}warning{% endif %}">{{ wo.status }}</span></td>
+                            <td><small class="text-muted">{{ wo.created_at.strftime('%m/%d/%Y') }}</small></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center py-3 text-muted">No work orders yet</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-calendar-day me-2"></i>Today's Schedule</strong>
+                <a href="/operations/schedule" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Time</th><th>Technician</th><th>Work Order</th></tr></thead>
+                    <tbody>
+                        {% for s in today_schedule %}
+                        <tr>
+                            <td><small>{{ s.start_time or '--' }} - {{ s.end_time or '--' }}</small></td>
+                            <td>{{ s.technician.name if s.technician else 'N/A' }}</td>
+                            <td><a href="/work-orders/{{ s.work_order_id }}" class="text-decoration-none">{{ s.work_order.title[:40] if s.work_order else 'N/A' }}</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center py-3 text-muted">No scheduled jobs today</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-bell me-2"></i>Active Alerts</strong>
+                <a href="/alerts" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Severity</th><th>Title</th><th></th></tr></thead>
+                    <tbody>
+                        {% for alert in alerts[:5] %}
+                        <tr>
+                            <td>
+                                {% if alert.severity == 'critical' %}
+                                <span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                                {% elif alert.severity == 'warning' %}
+                                <span class="text-warning"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                                {% else %}
+                                <span class="text-info"><i class="bi bi-info-circle-fill"></i></span>
+                                {% endif %}
+                            </td>
+                            <td>{{ alert.title }}</td>
+                            <td class="text-end"><a href="/alerts" class="btn btn-sm btn-link">View</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center py-3 text-muted">No active alerts</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script>document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });</script>
+{% endblock %}

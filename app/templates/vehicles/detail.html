@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-truck me-2"></i>{{ vehicle.make }} {{ vehicle.model }}</h4>
+    <div>
+        <a href="/vehicles/{{ vehicle.id }}/edit" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+        <a href="/work-orders/new?vehicle_id={{ vehicle.id }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New Work Order</a>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><strong>Vehicle Details</strong></div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Owner:</strong> <a href="/customers/{{ vehicle.customer.id }}" class="text-decoration-none">{{ vehicle.customer.name }}</a></p>
+                <p class="mb-1"><strong>Year:</strong> {{ vehicle.year or '-' }}</p>
+                <p class="mb-1"><strong>License Plate:</strong> {{ vehicle.license_plate or '-' }}</p>
+                <p class="mb-1"><strong>VIN:</strong> {{ vehicle.vin or '-' }}</p>
+                <p class="mb-1"><strong>Engine:</strong> {{ vehicle.engine_type or '-' }}</p>
+                <p class="mb-0"><strong>Added:</strong> {{ vehicle.created_at.strftime('%m/%d/%Y') }}</p>
+            </div>
+        </div>
+        {% if vehicle.notes %}
+        <div class="card mt-3">
+            <div class="card-header"><strong>Notes</strong></div>
+            <div class="card-body"><p class="mb-0 text-muted">{{ vehicle.notes }}</p></div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><strong>Service History ({{ vehicle.work_orders|length }})</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Title</th><th>Status</th><th>Labor</th><th>Parts</th><th>Total</th><th>Date</th></tr></thead>
+                    <tbody>
+                        {% for wo in vehicle.work_orders %}
+                        <tr>
+                            <td><a href="/work-orders/{{ wo.id }}" class="text-decoration-none">{{ wo.title[:50] }}</a></td>
+                            <td><span class="badge bg-{% if wo.status == 'Completed' %}success{% elif wo.status == 'In Progress' %}primary{% elif wo.status == 'New' %}info{% else %}warning{% endif %}">{{ wo.status }}</span></td>
+                            <td>{{ wo.labor_hours }}h</td>
+                            <td>${{ "%.2f"|format(wo.parts_total) }}</td>
+                            <td>${{ "%.2f"|format(wo.total_amount) }}</td>
+                            <td><small class="text-muted">{{ wo.created_at.strftime('%m/%d/%Y') }}</small></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-3 text-muted">No service history</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

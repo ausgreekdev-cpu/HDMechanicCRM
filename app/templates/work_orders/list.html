@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Work Orders</h4>
+    <div>
+        <a href="/export/work-orders" class="btn btn-outline-success btn-sm me-1"><i class="bi bi-download"></i></a>
+        <a href="/work-orders/new" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Work Order</a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto"><input type="text" name="search" class="form-control form-control-sm search-bar" placeholder="Search..." value="{{ search }}"></div>
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    {% for s in statuses %}<option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-search"></i></button></div>
+            {% if search or status %}<div class="col-auto"><a href="/work-orders" class="btn btn-sm btn-outline-secondary">Clear</a></div>{% endif %}
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead><tr><th>Title</th><th>Customer</th><th>Vehicle</th><th>Status</th><th>Total</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for wo in p.rows %}
+                    <tr>
+                        <td><a href="/work-orders/{{ wo.id }}" class="text-decoration-none fw-medium">{{ wo.title[:60] }}</a></td>
+                        <td><a href="/customers/{{ wo.customer.id }}" class="text-decoration-none">{{ wo.customer.name }}</a></td>
+                        <td><small class="text-muted">{{ wo.vehicle.make }} {{ wo.vehicle.model }}</small></td>
+                        <td><span class="badge bg-{% if wo.status == 'Completed' %}success{% elif wo.status == 'In Progress' %}primary{% elif wo.status == 'New' %}info{% elif wo.status == 'Diagnosing' %}warning{% elif wo.status == 'Waiting Parts' %}danger{% elif wo.status == 'Invoiced' %}secondary{% else %}dark{% endif %}">{{ wo.status }}</span></td>
+                        <td>${{ "%.2f"|format(wo.total_amount) }}</td>
+                        <td><small class="text-muted">{{ wo.created_at.strftime('%m/%d/%Y') }}</small></td>
+                        <td>
+                            <a href="/work-orders/{{ wo.id }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                            <form method="post" action="/work-orders/{{ wo.id }}/delete" class="d-inline" onsubmit="return confirm('Delete?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">No work orders found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "pagination.html" %}
+    </div>
+</div>
+{% endblock %}

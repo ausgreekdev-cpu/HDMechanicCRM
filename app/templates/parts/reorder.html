@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Reorder Suggestions</h4>
+    <a href="/parts" class="btn btn-outline-secondary btn-sm">Parts Inventory</a>
+  </div>
+  {% if suggestions %}
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Part</th><th>Part #</th><th>Current</th><th>Min</th><th>Max</th><th class="text-end">Suggested Qty</th><th class="text-end">Est. Cost</th><th></th></tr></thead>
+        <tbody>
+          {% for s in suggestions %}
+          <tr>
+            <td><a href="/parts/{{ s.part.id }}/edit">{{ s.part.name }}</a></td>
+            <td>{{ s.part.part_number or '' }}</td>
+            <td>{{ s.part.quantity_on_hand }}</td>
+            <td>{{ s.part.min_quantity }}</td>
+            <td>{{ s.part.max_quantity }}</td>
+            <td class="text-end">{{ s.suggested_qty }}</td>
+            <td class="text-end">${{ '%.2f'|format(s.estimated_cost) }}</td>
+            <td><a href="/purchase-orders/new?part_id={{ s.part.id }}&qty={{ s.suggested_qty}}" class="btn btn-sm btn-outline-primary">Create PO</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="mt-2 text-end fw-bold">Total Est. Cost: ${{ '%.2f'|format(suggestions|sum(attribute='estimated_cost')) }}</div>
+  {% else %}
+  <div class="card"><div class="card-body text-muted">No parts need reordering. All stock is at acceptable levels.</div></div>
+  {% endif %}
+</div>
+{% endblock %}

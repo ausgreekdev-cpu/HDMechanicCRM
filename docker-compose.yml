@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - CRM_SECRET_KEY=${CRM_SECRET_KEY}
+      - FLASK_DEBUG=0
+    volumes:
+      - crm-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  crm-data:

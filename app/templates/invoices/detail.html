@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Invoice {{ inv.invoice_number }}</h4>
+    <div>
+      <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+      <a href="/invoices" class="btn btn-outline-secondary btn-sm">Back</a>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="row mb-2"><div class="col-4 text-muted">Work Order</div><div class="col-8">{{ inv.work_order.title if inv.work_order else 'N/A' }}</div></div>
+          <div class="row mb-2"><div class="col-4 text-muted">Customer</div><div class="col-8">{{ inv.work_order.customer.name if inv.work_order and inv.work_order.customer else 'N/A' }}</div></div>
+          <div class="row mb-2"><div class="col-4 text-muted">Vehicle</div><div class="col-8">{{ inv.work_order.vehicle.make }} {{ inv.work_order.vehicle.model }} ({{ inv.work_order.vehicle.license_plate or '' }})</div></div>
+          <div class="row mb-2"><div class="col-4 text-muted">Created</div><div class="col-8">{{ inv.created_at.strftime('%m/%d/%Y') }}</div></div>
+          <div class="row mb-2"><div class="col-4 text-muted">Status</div><div class="col-8">
+            {% if inv.status == 'Paid' %}<span class="badge bg-success">Paid</span>
+            {% elif inv.status == 'Partial' %}<span class="badge bg-warning text-dark">Partial</span>
+            {% else %}<span class="badge bg-danger">Unpaid</span>{% endif %}
+          </div></div>
+        </div>
+      </div>
+      <div class="card mb-3">
+        <div class="card-header"><h6 class="mb-0">Line Items</h6></div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Item</th><th class="text-end">Amount</th></tr></thead>
+            <tbody>
+              {% for item in inv.work_order.items %}
+              <tr><td>{{ item.description }}{% if item.part_used %} ({{ item.part_used }}){% endif %}</td><td class="text-end">${{ '%.2f'|format(item.total_price) }}</td></tr>
+              {% endfor %}
+              <tr><td>Labor ({{ inv.work_order.labor_hours }}h @ ${{ '%.2f'|format(inv.work_order.labor_rate) }}/h)</td><td class="text-end">${{ '%.2f'|format(inv.work_order.labor_hours * inv.work_order.labor_rate) }}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="row mb-1"><div class="col-8 text-muted">Parts Total</div><div class="col-4 text-end">${{ '%.2f'|format(inv.subtotal) }}</div></div>
+          <div class="row mb-1"><div class="col-8 text-muted">Tax ({{ inv.tax_rate }}%)</div><div class="col-4 text-end">${{ '%.2f'|format(inv.tax_amount) }}</div></div>
+          <div class="row mb-1"><div class="col-8 fw-bold">Total</div><div class="col-4 text-end fw-bold">${{ '%.2f'|format(inv.total_amount) }}</div></div>
+          <hr>
+          <div class="row mb-1"><div class="col-8 text-muted">Paid</div><div class="col-4 text-end text-success">${{ '%.2f'|format(inv.amount_paid) }}</div></div>
+          <div class="row"><div class="col-8 fw-bold">Balance Due</div><div class="col-4 text-end fw-bold {% if balance > 0 %}text-danger{% else %}text-success{% endif %}">${{ '%.2f'|format(balance) }}</div></div>
+        </div>
+      </div>
+      {% if inv.notes %}
+      <div class="card mt-3"><div class="card-body"><small class="text-muted">Notes:</small><p class="mb-0">{{ inv.notes }}</p></div></div>
+      {% endif %}
+    </div>
+    <div class="col-md-4">
+      {% if inv.status != 'Paid' %}
+      <div class="card mb-3">
+        <div class="card-header"><h6 class="mb-0">Record Payment</h6></div>
+        <div class="card-body">
+          <form method="POST" action="/invoices/{{ inv.id }}/pay">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-2">
+              <label class="form-label small">Amount</label>
+              <input type="number" step="0.01" name="amount" class="form-control form-control-sm" value="{{ '%.2f'|format(balance) }}">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Payment Method</label>
+              <select name="payment_method" class="form-select form-select-sm">
+                <option>Cash</option>
+                <option>Check</option>
+                <option>Credit Card</option>
+                <option>Debit Card</option>
+                <option>Bank Transfer</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Reference (check #, etc.)</label>
+              <input type="text" name="reference" class="form-control form-control-sm">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Notes</label>
+              <input type="text" name="notes" class="form-control form-control-sm">
+            </div>
+            <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-check-circle"></i> Record Payment</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+      <div class="card">
+        <div class="card-header"><h6 class="mb-0">Payment History</h6></div>
+        <div class="card-body p-0">
+          {% if payments %}
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Date</th><th>Method</th><th class="text-end">Amount</th></tr></thead>
+            <tbody>
+              {% for pmt in payments %}
+              <tr>
+                <td><small>{{ pmt.paid_at.strftime('%m/%d/%y') }}</small></td>
+                <td><small>{{ pmt.payment_method }}</small></td>
+                <td class="text-end"><small>${{ '%.2f'|format(pmt.amount) }}</small></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="p-3 text-muted small">No payments recorded</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card mt-3">
+        <div class="card-header"><h6 class="mb-0">Attachments</h6></div>
+        <div class="card-body">
+          <div id="attachment-list-{{ inv.id }}" data-entity="invoice" data-id="{{ inv.id }}">
+            <div class="text-muted small">Loading...</div>
+          </div>
+          <hr>
+          <form method="POST" action="/attachments/invoice/{{ inv.id }}/upload" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="input-group input-group-sm mb-2">
+              <input type="file" name="file" class="form-control form-control-sm" required>
+              <button class="btn btn-outline-primary btn-sm" type="submit">Upload</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[id^="attachment-list-"]').forEach(function(el) {
+    var entity = el.dataset.entity;
+    var id = el.dataset.id;
+    fetch('/attachments/' + entity + '/' + id).then(function(r) { return r.json(); }).then(function(files) {
+      if (files.length === 0) { el.innerHTML = '<div class="text-muted small">No files</div>'; return; }
+      var html = '<ul class="list-unstyled mb-0 small">';
+      files.forEach(function(f) {
+        html += '<li class="mb-1"><a href="/attachments/download/' + f.id + '" class="text-decoration-none"><i class="bi bi-paperclip"></i> ' + f.name + '</a> <form method="POST" action="/attachments/' + f.id + '/delete" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-link btn-sm text-danger p-0" title="Delete"><i class="bi bi-x"></i></button></form></li>';
+      });
+      html += '</ul>';
+      el.innerHTML = html;
+    });
+  });
+});
+</script>
+{% endblock %}

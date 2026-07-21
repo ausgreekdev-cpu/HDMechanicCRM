@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="mb-0">Shop Supplies</h4><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newModal"><i class="bi bi-plus"></i> New Supply</button></div>
+<div class="card"><div class="card-body p-0">
+<table class="table table-sm mb-0"><thead><tr><th>Name</th><th>Category</th><th class="text-end">Qty</th><th>Unit</th><th class="text-end">Min</th><th class="text-end">Cost/Unit</th></tr></thead>
+<tbody>{% for s in supplies %}<tr><td>{{ s.name }}</td><td>{{ s.category or '' }}</td><td class="text-end {% if s.quantity_on_hand <= s.min_quantity %}text-danger fw-bold{% endif %}">{{ s.quantity_on_hand }}</td><td>{{ s.unit }}</td><td class="text-end">{{ s.min_quantity }}</td><td class="text-end">${{ '%.2f'|format(s.cost_per_unit) }}</td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No supplies</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

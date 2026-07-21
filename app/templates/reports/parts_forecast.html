@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Parts Usage Forecast</h4>
+    <a href="/reports" class="btn btn-outline-secondary btn-sm">Back to Reports</a>
+  </div>
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Part Name</th><th class="text-end">Total Used</th><th class="text-end">Times Used</th><th class="text-end">Avg/WO</th><th class="text-end">Current Stock</th><th class="text-end">Min Qty</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for r in results %}
+          <tr>
+            <td>{{ r.part_name }}</td>
+            <td class="text-end">{{ r.total_used }}</td>
+            <td class="text-end">{{ r.times_used }}</td>
+            <td class="text-end">{{ r.avg_per_wo }}</td>
+            <td class="text-end">{{ r.current_stock }}</td>
+            <td class="text-end">{{ r.min_qty }}</td>
+            <td>{% if r.current_stock <= r.min_qty %}<span class="badge bg-danger">Low</span>{% else %}<span class="badge bg-success">OK</span>{% endif %}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-muted text-center">No usage data yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Scrap Inventory</h4>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-secondary"><i class="bi bi-boxes"></i></div>
+            <h3 class="mb-0">{{ p.total }}</h3>
+            <small class="text-muted">Material Types</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-warning"><i class="bi bi-circle"></i></div>
+            <h3 class="mb-0">{{ "%.1f"|format(total_weight) }}</h3>
+            <small class="text-muted">Total Weight (kg)</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-center">
+            <div class="stat-icon text-success"><i class="bi bi-currency-dollar"></i></div>
+            <h3 class="mb-0">${{ "%.2f"|format(total_value) }}</h3>
+            <small class="text-muted">Estimated Value</small>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Material Type</th><th>Weight (kg)</th><th>Est. Value</th><th>Value/kg</th><th>Last Updated</th><th>Actions</th></tr></thead>
+            <tbody>
+                    {% for inv in p.rows %}
+                <tr>
+                    <td class="fw-medium">{{ inv.material_type }}</td>
+                    <td>{{ "%.1f"|format(inv.weight_kg) }}</td>
+                    <td>${{ "%.2f"|format(inv.estimated_value) }}</td>
+                    <td>{% if inv.weight_kg > 0 %}${{ "%.2f"|format(inv.estimated_value / inv.weight_kg) }}{% else %}-{% endif %}</td>
+                    <td><small class="text-muted">{{ inv.updated_at.strftime('%m/%d/%Y') if inv.updated_at else '-' }}</small></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editInv{{ inv.id }}"><i class="bi bi-pencil"></i></button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center py-4 text-muted">No inventory tracked yet. Add scrap pickups to populate.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "pagination.html" %}
+</div>
+
+{% for inv in p.rows %}
+<div class="modal fade" id="editInv{{ inv.id }}" tabindex="-1">
+    <div class="modal-dialog modal-sm"><div class="modal-content">
+        <form method="post" action="/scrap/inventory/{{ inv.id }}/edit">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-header"><h6 class="modal-title">{{ inv.material_type }}</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label class="form-label">Weight (kg)</label><input type="number" step="0.1" name="weight_kg" class="form-control" value="{{ inv.weight_kg }}"></div>
+                <div class="mb-2"><label class="form-label">Est. Value ($)</label><input type="number" step="0.01" name="estimated_value" class="form-control" value="{{ inv.estimated_value }}"></div>
+                <div><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2">{{ inv.notes or '' }}</textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+{% endfor %}
+{% endblock %}
