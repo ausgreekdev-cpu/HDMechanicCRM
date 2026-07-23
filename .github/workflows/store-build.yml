@@ -1,0 +1,140 @@
+name: Build & Deploy to Stores
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-pwa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate icons
+        run: python -c "
+          from PIL import Image, ImageDraw, ImageFont
+          import os
+          icons_dir = 'app/static/icons'
+          os.makedirs(icons_dir, exist_ok=True)
+          for size in [72, 96, 128, 144, 192, 512]:
+              img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+              draw = ImageDraw.Draw(img)
+              draw.rounded_rectangle([10, 10, size-10, size-10], radius=size//6, fill=(0, 51, 102))
+              draw.text((size//2, size//2), 'HD', fill='white', anchor='mm')
+              img.save(os.path.join(icons_dir, f'icon-{size}.png'))
+          "
+
+      - name: Create PWA build
+        run: |
+          mkdir -p dist
+          cp -r app/static/* dist/
+          cp manifest.json dist/
+          cp app/static/sw.js dist/sw.js
+
+      - name: Upload PWA artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-build
+          path: dist/
+
+  build-android:
+    needs: build-pwa
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Download PWA artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pwa-build
+          path: dist/
+
+      - name: Install Bubblewrap
+        run: npm install -g @nicedash/pwabuilder-cli
+
+      - name: Build Android AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          npx @nicedash/pwabuilder-cli init \
+            --app-name "HDMechanicCRM" \
+            --package "com.hdmechanic.crm" \
+            --host "localhost:8000" \
+            --icon "dist/icon-512.png" \
+            --theme-color "#003366"
+          npx @nicedash/pwabuilder-cli build
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build
+          path: app/build/outputs/bundle/release/
+
+  build-windows:
+    needs: build-pwa
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download PWA artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pwa-build
+          path: dist/
+
+      - name: Package MSIX
+        run: |
+          mkdir package
+          Copy-Item -Path "dist\*" -Destination "package\" -Recurse
+          # MSIX packaging would go here using makeappx.exe
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: package/
+
+  submit-stores:
+    needs: [build-android, build-windows]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Submit to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: com.hdmechanic.crm
+          releaseFiles: android-build/app-release.aab
+          track: production
+
+      - name: Notify completion
+        run: echo "Store builds complete! Check artifacts for manual upload."

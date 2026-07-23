@@ -17,3 +17,18 @@ dist2/
 .spec
 data/uploads/
 data/*.db
+
+# Store build artifacts
+*.aab
+*.apk
+*.msix
+*.msixupload
+*.appxupload
+android/
+package/
+docs/icons/
+
+# Keystore files
+*.keystore
+*.jks
+keystore.properties

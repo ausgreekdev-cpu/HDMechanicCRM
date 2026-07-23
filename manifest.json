@@ -1,0 +1,73 @@
+{
+  "name": "HDMechanicCRM",
+  "short_name": "HDMechanic",
+  "description": "All-in-one mechanic shop & scrap metal business CRM",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#003366",
+  "theme_color": "#003366",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "url": "/",
+      "description": "View business overview"
+    },
+    {
+      "name": "New Work Order",
+      "short_name": "New Job",
+      "url": "/work-orders/new",
+      "description": "Create a new work order"
+    },
+    {
+      "name": "Inventory",
+      "short_name": "Parts",
+      "url": "/inventory",
+      "description": "Manage parts inventory"
+    },
+    {
+      "name": "Scrap Metal",
+      "short_name": "Scrap",
+      "url": "/scrap-metal",
+      "description": "Manage scrap metal operations"
+    }
+  ]
+}
