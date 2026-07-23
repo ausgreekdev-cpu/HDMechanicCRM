@@ -1,5 +1,5 @@
 import os
-from flask import Flask, g, session, redirect
+from flask import Flask, g, session
 from flask_wtf.csrf import CSRFProtect
 from app.database import SessionLocal
 
@@ -15,9 +15,21 @@ def create_app(config_override=None):
             "CRM_SECRET_KEY environment variable is required. "
             "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
         )
+
     app.config["SECRET_KEY"] = _secret
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.config["DEBUG"] = debug
+
+    if not debug:
+        app.config["SESSION_COOKIE_SECURE"] = True
+        app.config["SESSION_COOKIE_NAME"] = "__Host-session"
+        app.config["PERMANENT_SESSION_LIFETIME"] = 86400 * 7
+        app.config["PREFERRED_URL_SCHEME"] = "https"
+
+    app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
     if config_override:
         app.config.update(config_override)
