@@ -890,3 +890,8 @@ def health_check():
         return jsonify({"status": "healthy", "database": "connected"})
     except Exception as e:
         return jsonify({"status": "unhealthy", "error": str(e)}), 503
+
+
+@bp.route("/privacy")
+def privacy_policy():
+    return render_template("privacy.html")
