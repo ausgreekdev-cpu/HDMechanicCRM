@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: hdmechaniccrm
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -c gunicorn.conf.py main:app
+    envVars:
+      - key: CRM_SECRET_KEY
+        generateValue: true
+      - key: CRM_ADMIN_PASSWORD
+        generateValue: true
+      - key: CRM_ADMIN_USER
+        value: admin
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: CRM_LOG_LEVEL
+        value: INFO
+      - key: CRM_GUNICORN_WORKERS
+        value: "2"
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
