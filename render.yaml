@@ -20,7 +20,3 @@ services:
         value: "2"
     healthCheckPath: /health
     autoDeploy: true
-    disk:
-      name: data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
