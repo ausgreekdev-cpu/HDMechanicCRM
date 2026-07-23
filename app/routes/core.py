@@ -895,3 +895,8 @@ def health_check():
 @bp.route("/privacy")
 def privacy_policy():
     return render_template("privacy.html")
+
+
+@bp.route("/data-deletion")
+def data_deletion():
+    return render_template("data-deletion.html")
