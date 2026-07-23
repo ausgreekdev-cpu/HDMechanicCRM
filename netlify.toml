@@ -1,33 +1,26 @@
 [build]
-  command = "pip install -r requirements.txt serverless-wsgi"
+  command = "pip install -r requirements.txt serverless-wsgi -t netlify/functions/vendor && mkdir -p public"
   functions = "netlify/functions"
-  publish = "app/static"
+  publish = "public"
 
 [build.environment]
   PYTHON_VERSION = "3.12"
-  CRM_SECRET_KEY = ""
-  CRM_DATABASE_URL = ""
 
+# All routes go through the serverless function
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/app/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/static/*"
-  to = "/static/:splat"
-  status = 200
+  from = "/.netlify/functions/handler"
+  to = "/.netlify/functions/handler/"
+  status = 301
 
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/app"
+  to = "/.netlify/functions/handler/:splat"
   status = 200
-  force = false
 
 [[headers]]
-  for = "/static/*"
+  for = "/.netlify/functions/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "no-cache"
 
 [[headers]]
   for = "/*"
@@ -39,14 +32,6 @@
 [functions]
   node_bundler = "esbuild"
   included_files = [
-    "app/templates/**",
-    "app/static/**",
-    "app/models/**",
-    "app/routes/**",
-    "app/forms.py",
-    "app/auth.py",
-    "app/database.py",
-    "app/agents.py",
-    "app/indexes.py",
+    "app/**",
     "data/**"
   ]
