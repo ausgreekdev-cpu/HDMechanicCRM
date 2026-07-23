@@ -1,16 +1,14 @@
 [build]
-  command = "mkdir -p public"
+  command = """
+    mkdir -p public &&
+    cp -r app netlify/functions/app &&
+    mkdir -p netlify/functions/data
+  """
   functions = "netlify/functions"
   publish = "public"
 
 [build.environment]
   PYTHON_VERSION = "3.12"
-
-# All routes go through the serverless function
-[[redirects]]
-  from = "/.netlify/functions/handler"
-  to = "/.netlify/functions/handler/"
-  status = 301
 
 [[redirects]]
   from = "/*"
@@ -18,19 +16,8 @@
   status = 200
 
 [[headers]]
-  for = "/.netlify/functions/*"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-
-[functions]
-  included_files = [
-    "app/**",
-    "data/**"
-  ]
