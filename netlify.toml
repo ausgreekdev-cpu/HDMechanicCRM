@@ -1,0 +1,52 @@
+[build]
+  command = "pip install -r requirements.txt serverless-wsgi"
+  functions = "netlify/functions"
+  publish = "app/static"
+
+[build.environment]
+  PYTHON_VERSION = "3.12"
+  CRM_SECRET_KEY = ""
+  CRM_DATABASE_URL = ""
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/app/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/app"
+  status = 200
+  force = false
+
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = [
+    "app/templates/**",
+    "app/static/**",
+    "app/models/**",
+    "app/routes/**",
+    "app/forms.py",
+    "app/auth.py",
+    "app/database.py",
+    "app/agents.py",
+    "app/indexes.py",
+    "data/**"
+  ]

@@ -1,0 +1,11 @@
+flask>=3.0,<4.0
+sqlalchemy>=2.0,<3.0
+jinja2>=3.0,<4.0
+flask-wtf>=1.2,<2.0
+werkzeug>=3.0,<4.0
+apscheduler>=3.10,<4.0
+python-dotenv>=1.0,<2.0
+flask-limiter>=3.0,<4.0
+Pillow>=10.0,<11.0
+email-validator>=2.0,<3.0
+serverless-wsgi>=3.0,<4.0
