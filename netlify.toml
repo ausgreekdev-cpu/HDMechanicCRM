@@ -1,5 +1,5 @@
 [build]
-  command = "pip install -r requirements.txt serverless-wsgi -t netlify/functions/vendor && mkdir -p public"
+  command = "mkdir -p public"
   functions = "netlify/functions"
   publish = "public"
 
@@ -30,7 +30,6 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
 
 [functions]
-  node_bundler = "esbuild"
   included_files = [
     "app/**",
     "data/**"

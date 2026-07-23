@@ -5,9 +5,8 @@ import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(HERE, "vendor"))
 
-os.environ.setdefault("CRM_SECRET_KEY", os.environ.get("CRM_SECRET_KEY", "netlify-change-this-in-production"))
+os.environ.setdefault("CRM_SECRET_KEY", os.environ.get("CRM_SECRET_KEY", "netlify-production-key-2024"))
 os.environ.setdefault("FLASK_DEBUG", "0")
 
 app = None
@@ -37,7 +36,7 @@ try:
     import serverless_wsgi
 except ImportError:
     if error_msg is None:
-        error_msg = "serverless-wsgi not installed in bundle"
+        error_msg = "serverless-wsgi not installed"
 
 
 def handler(event, context):
