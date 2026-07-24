@@ -20,11 +20,9 @@ data/*.db
 
 # Store build artifacts
 *.aab
-*.apk
 *.msix
 *.msixupload
 *.appxupload
-android/
 package/
 docs/icons/
 
@@ -32,3 +30,11 @@ docs/icons/
 *.keystore
 *.jks
 keystore.properties
+
+# Android build artifacts
+android/.gradle/
+android/app/build/
+android/local.properties
+android/captures/
+android/externalNativeBuild/
+android/.cxx/

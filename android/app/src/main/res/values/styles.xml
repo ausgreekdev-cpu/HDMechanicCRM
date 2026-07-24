@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.HDMechanicCRM" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#003366</item>
+        <item name="colorPrimaryVariant">#001F3F</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#3B82F6</item>
+        <item name="android:statusBarColor">#001F3F</item>
+        <item name="android:navigationBarColor">#001F3F</item>
+    </style>
+</resources>
