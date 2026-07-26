@@ -69,6 +69,12 @@ if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
     except Exception as e:
         logging.warning(f"Scheduler failed to start: {e}")
 
+    try:
+        from app.seed import seed_demo_data
+        seed_demo_data()
+    except Exception as e:
+        logging.warning(f"Demo seed skipped: {e}")
+
 
 if __name__ == "__main__":
     import webbrowser
