@@ -108,6 +108,14 @@ def admin_toggle_user(uid):
     return redirect("/admin/users")
 
 
+@bp.route("/admin/square-setup")
+@login_required
+@admin_required
+def square_setup():
+    from app.payments_square import square_enabled
+    return render_template("square_setup.html", square_enabled=square_enabled(), active_page="square_setup")
+
+
 @bp.route("/admin/analytics")
 @login_required
 @admin_required

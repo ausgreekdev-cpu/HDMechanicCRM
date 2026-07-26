@@ -7,7 +7,7 @@ from app.models.templates import (
     SubscriptionPlan, UserSubscription
 )
 from app.models.core import User
-from app.payments import stripe_enabled
+from app.payments_square import square_enabled
 
 bp = Blueprint("marketplace", __name__, url_prefix="/marketplace")
 
@@ -109,22 +109,7 @@ def purchase_template(tid):
         flash("You already own this template", "info")
         return redirect(url_for("marketplace.template_detail", slug=tmpl.slug))
 
-    if stripe_enabled():
-        return redirect(url_for("stripe_webhooks.create_template_checkout_route", tid=tid))
-
-    purchase = TemplatePurchase(
-        user_id=session["user_id"],
-        template_id=tid,
-        amount_paid=tmpl.price,
-        payment_method="stripe",
-        stripe_payment_id=f"pi_demo_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-        status="completed"
-    )
-    tmpl.purchase_count = (tmpl.purchase_count or 0) + 1
-    g.db.add(purchase)
-    g.db.commit()
-    flash(f"Purchased '{tmpl.name}' for ${tmpl.price:.2f}!", "success")
-    return redirect(url_for("marketplace.template_detail", slug=tmpl.slug))
+    return redirect(url_for("square_payments.checkout_template", tid=tid))
 
 
 @bp.route("/template/<int:tid>/apply", methods=["POST"])
@@ -169,22 +154,7 @@ def subscribe(plan_id):
         flash("You already have an active subscription. Cancel it first.", "warning")
         return redirect(url_for("marketplace.plans"))
 
-    if stripe_enabled():
-        return redirect(url_for("stripe_webhooks.create_plan_checkout", plan_id=plan_id, cycle=cycle))
-
-    sub = UserSubscription(
-        user_id=session["user_id"],
-        plan_id=plan.id,
-        billing_cycle=cycle,
-        status="active",
-        stripe_subscription_id=f"sub_demo_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-        current_period_start=datetime.utcnow(),
-        current_period_end=datetime.utcnow() + timedelta(days=30 if cycle == "monthly" else 365),
-    )
-    g.db.add(sub)
-    g.db.commit()
-    flash(f"Subscribed to {plan.name} ({cycle})! Enjoy your new features.", "success")
-    return redirect(url_for("marketplace.index"))
+    return redirect(url_for("square_payments.checkout_plan", plan_id=plan_id, cycle=cycle))
 
 
 @bp.route("/my-templates")

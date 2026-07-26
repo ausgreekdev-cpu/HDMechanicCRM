@@ -63,7 +63,7 @@ class TemplatePurchase(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     template_id = Column(Integer, ForeignKey("workflow_templates.id"), nullable=False)
     amount_paid = Column(Float, nullable=False)
-    payment_method = Column(String(50), default="stripe")
+    payment_method = Column(String(50), default="square")
     stripe_payment_id = Column(String(200), default="")
     status = Column(String(20), default="completed")  # completed, refunded, pending
     created_at = Column(DateTime, default=datetime.utcnow)

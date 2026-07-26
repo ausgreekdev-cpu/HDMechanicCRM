@@ -98,7 +98,7 @@
                     <p class="text-secondary mb-2">Buy individually or subscribe for full access.</p>
 
                     {% if template.price > 0 %}
-                    <form method="post" action="{{ url_for('marketplace.purchase_template', tid=template.id) }}" class="mb-3">
+                    <form method="post" action="{{ url_for('square_payments.checkout_template', tid=template.id) }}" class="mb-3">
                         <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">
                             Buy for ${{ "%.2f"|format(template.price) }}
                         </button>

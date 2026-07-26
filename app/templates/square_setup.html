@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-3">
+            <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+            <li class="breadcrumb-item active">Square Setup</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-secondary mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Square Payment Integration</h5>
+                </div>
+                <div class="card-body">
+                    <p>Square is the recommended payment provider for HDMechanicCRM. Many mechanic shops already use Square POS terminals, making it a natural fit.</p>
+
+                    <h6 class="mt-4 mb-3">Required Environment Variables</h6>
+                    <table class="table table-bordered table-dark">
+                        <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>CRM_SQUARE_ACCESS_TOKEN</code></td><td>Your Square access token (OAuth or personal token)</td></tr>
+                            <tr><td><code>CRM_SQUARE_LOCATION_ID</code></td><td>Your Square location ID (found in Developer Dashboard)</td></tr>
+                            <tr><td><code>CRM_SQUARE_ENVIRONMENT</code></td><td><code>sandbox</code> for testing, <code>production</code> for live</td></tr>
+                            <tr><td><code>CRM_SQUARE_WEBHOOK_SIGNATURE_KEY</code></td><td>Webhook signature key (for verifying webhook authenticity)</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="text-secondary small">When <code>CRM_SQUARE_ACCESS_TOKEN</code> is not set, the CRM runs in <strong>demo mode</strong> — payments are simulated and no real charges occur.</p>
+
+                    <h6 class="mt-4 mb-3">Setup Steps</h6>
+                    <ol>
+                        <li>Create a free <a href="https://developer.squareup.com/apps" target="_blank">Square Developer Account</a></li>
+                        <li>Create a new application in the Developer Dashboard</li>
+                        <li>Generate an access token (use sandbox token for testing)</li>
+                        <li>Copy your <strong>Location ID</strong> from the Locations page</li>
+                        <li>Add the variables above to your <code>.env</code> file</li>
+                        <li>Configure webhooks (see below) and set <code>CRM_SQUARE_WEBHOOK_SIGNATURE_KEY</code></li>
+                        <li>Restart the CRM</li>
+                    </ol>
+
+                    <h6 class="mt-4 mb-3">Webhook Configuration</h6>
+                    <p>In the Square Developer Dashboard, add a webhook endpoint:</p>
+                    <ul>
+                        <li><strong>URL:</strong> <code>https://your-domain.com/payments/webhook</code></li>
+                        <li><strong>Events to subscribe to:</strong></li>
+                        <ul>
+                            <li><code>payment.completed</code></li>
+                            <li><code>subscription.created</code></li>
+                            <li><code>subscription.canceled</code></li>
+                        </ul>
+                    </ul>
+
+                    <h6 class="mt-4 mb-3">POS Integration</h6>
+                    <p>If you use a Square Terminal or Square POS at your shop, you can link the same Square account. Payments made through your POS will appear in the same Square Dashboard as online payments.</p>
+                    <p>Learn more: <a href="https://squareup.com/us/en/appointments" target="_blank">Square Appointments</a> | <a href="https://squareup.com/us/en/pos" target="_blank">Square Point of Sale</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-secondary mb-4">
+                <div class="card-body text-center">
+                    <h6>Current Status</h6>
+                    {% if square_enabled %}
+                    <span class="badge bg-success fs-6 mb-3">Connected</span>
+                    <p class="text-secondary small">Square is configured and ready to process payments.</p>
+                    {% else %}
+                    <span class="badge bg-warning fs-6 mb-3">Demo Mode</span>
+                    <p class="text-secondary small">No Square token configured. Payments are simulated.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <h6>Helpful Links</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="https://developer.squareup.com/docs" target="_blank"><i class="bi bi-book me-2"></i>Square Developer Docs</a></li>
+                        <li class="mb-2"><a href="https://developer.squareup.com/apps" target="_blank"><i class="bi bi-gear me-2"></i>Developer Dashboard</a></li>
+                        <li class="mb-2"><a href="https://developer.squareup.com/reference/square" target="_blank><i class="bi bi-code-slash me-2"></i>API Reference</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
