@@ -75,6 +75,12 @@ if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
     except Exception as e:
         logging.warning(f"Demo seed skipped: {e}")
 
+    try:
+        from app.seed import seed_template_data
+        seed_template_data()
+    except Exception as e:
+        logging.warning(f"Template seed skipped: {e}")
+
 
 if __name__ == "__main__":
     import webbrowser

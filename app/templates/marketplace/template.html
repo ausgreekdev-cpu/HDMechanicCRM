@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-3">
+            <li class="breadcrumb-item"><a href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('marketplace.category', slug=template.category.slug) }}">{{ template.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ template.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-secondary mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge bg-{{ 'success' if template.tier == 'free' else 'primary' if template.tier == 'pro' else 'warning' }} me-2">{{ template.tier|upper }}</span>
+                            <span class="badge bg-secondary me-2"><i class="bi bi-clock me-1"></i>{{ template.estimated_time }}</span>
+                            <span class="badge bg-secondary me-2"><i class="bi bi-bar-chart me-1"></i>{{ template.difficulty }}</span>
+                            {% if template.rating > 0 %}
+                            <span class="badge bg-secondary"><i class="bi bi-star-fill text-warning me-1"></i>{{ "%.1f"|format(template.rating) }} ({{ template.rating_count }})</span>
+                            {% endif %}
+                        </div>
+                        {% if template.price > 0 %}
+                        <h3 class="text-success mb-0">${{ "%.2f"|format(template.price) }}</h3>
+                        {% else %}
+                        <h3 class="text-success mb-0">FREE</h3>
+                        {% endif %}
+                    </div>
+                    <h2>{{ template.name }}</h2>
+                    <p class="text-secondary">{{ template.long_description or template.description }}</p>
+
+                    {% if template.tags %}
+                    <div class="mb-3">
+                        {% for tag in template.tags.split(',') %}
+                        <span class="badge bg-dark me-1">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Steps -->
+                    {% if template.steps %}
+                    <h5 class="mt-4 mb-3">Workflow Steps</h5>
+                    <ol class="list-group list-group-numbered mb-4">
+                        {% for step in template.steps %}
+                        <li class="list-group-item bg-dark text-white border-secondary">
+                            <div class="ms-2">{{ step }}</div>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+
+                    <!-- Checklist -->
+                    {% if template.checklist %}
+                    <h5 class="mt-4 mb-3">Checklist</h5>
+                    <ul class="list-group mb-4">
+                        {% for item in template.checklist %}
+                        <li class="list-group-item bg-dark text-white border-secondary">
+                            <i class="bi bi-check-square text-success me-2"></i>{{ item }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Action Card -->
+            <div class="card border-secondary mb-4 sticky-top" style="top: 80px;">
+                <div class="card-body text-center">
+                    {% if has_access %}
+                    <i class="bi bi-check-circle-fill text-success fs-1 mb-3"></i>
+                    <h5>You have access</h5>
+                    <p class="text-secondary">Apply this template to your workflow.</p>
+                    <form method="post" action="{{ url_for('marketplace.apply_template', tid=template.id) }}">
+                        <button type="submit" class="btn btn-success btn-lg w-100"><i class="bi bi-play-fill me-2"></i>Apply Template</button>
+                    </form>
+                    {% elif purchased %}
+                    <i class="bi bi-check-circle-fill text-info fs-1 mb-3"></i>
+                    <h5>Purchased</h5>
+                    <p class="text-secondary">You own this template.</p>
+                    <form method="post" action="{{ url_for('marketplace.apply_template', tid=template.id) }}">
+                        <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-play-fill me-2"></i>Apply Template</button>
+                    </form>
+                    {% elif template.tier == 'free' %}
+                    <i class="bi bi-unlock-fill text-success fs-1 mb-3"></i>
+                    <h5>Free Template</h5>
+                    <p class="text-secondary">No purchase required.</p>
+                    <a href="{{ url_for('marketplace.plans') }}" class="btn btn-outline-secondary w-100 mb-2">Upgrade for More</a>
+                    <form method="post" action="{{ url_for('marketplace.apply_template', tid=template.id) }}">
+                        <button type="submit" class="btn btn-success btn-lg w-100"><i class="bi bi-play-fill me-2"></i>Use Free Template</button>
+                    </form>
+                    {% else %}
+                    <i class="bi bi-lock-fill text-warning fs-1 mb-3"></i>
+                    <h5>{{ template.tier|upper }} Template</h5>
+                    <p class="text-secondary mb-2">Buy individually or subscribe for full access.</p>
+
+                    {% if template.price > 0 %}
+                    <form method="post" action="{{ url_for('marketplace.purchase_template', tid=template.id) }}" class="mb-3">
+                        <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">
+                            Buy for ${{ "%.2f"|format(template.price) }}
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <a href="{{ url_for('marketplace.plans') }}" class="btn btn-primary w-100">Subscribe Instead</a>
+                    {% endif %}
+
+                    <hr>
+                    <small class="text-secondary">
+                        <i class="bi bi-download me-1"></i>{{ template.purchase_count or 0 }} purchases<br>
+                        <i class="bi bi-clock me-1"></i>{{ template.estimated_time }} estimated<br>
+                        <i class="bi bi-tag me-1"></i>{{ template.category.name }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if related %}
+    <h4 class="mt-5 mb-3">Related Templates</h4>
+    <div class="row g-4">
+        {% for tmpl in related %}
+        <div class="col-md-4">
+            <div class="card h-100 border-secondary">
+                <div class="card-body">
+                    <span class="badge bg-{{ 'success' if tmpl.tier == 'free' else 'primary' }} mb-2">{{ tmpl.tier|upper }}</span>
+                    <h6>{{ tmpl.name }}</h6>
+                    <p class="text-secondary small mb-2">{{ tmpl.description[:100] }}</p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{{ url_for('marketplace.template_detail', slug=tmpl.slug) }}" class="btn btn-outline-primary btn-sm w-100">View</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

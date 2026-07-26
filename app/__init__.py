@@ -61,7 +61,7 @@ def create_app(config_override=None):
     from app.routes import (
         core, dashboard, customers, vehicles, work_orders, parts, scrap_metal,
         operations, communications, technicians, invoices, purchase_orders, dvi,
-        advanced_ops, finance, inventory_advanced, crm_advanced
+        advanced_ops, finance, inventory_advanced, crm_advanced, marketplace
     )
 
     app.register_blueprint(core.bp)
@@ -81,5 +81,6 @@ def create_app(config_override=None):
     app.register_blueprint(finance.bp)
     app.register_blueprint(inventory_advanced.bp)
     app.register_blueprint(crm_advanced.bp)
+    app.register_blueprint(marketplace.bp)
 
     return app

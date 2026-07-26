@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-shop me-2"></i>Template Marketplace</h2>
+            <p class="text-secondary mb-0">Pre-built workflows to supercharge your shop</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('marketplace.my_templates') }}" class="btn btn-outline-info"><i class="bi bi-collection me-1"></i>My Templates</a>
+            <a href="{{ url_for('marketplace.plans') }}" class="btn btn-primary"><i class="bi bi-star me-1"></i>Subscription Plans</a>
+        </div>
+    </div>
+
+    <!-- Subscription Banner -->
+    {% if not user_plan %}
+    <div class="card border-primary mb-4" style="background: linear-gradient(135deg, #003366, #1e3a5f);">
+        <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+                <h5 class="text-white mb-1">Unlock All Templates with Pro</h5>
+                <p class="text-white-50 mb-0">Get access to all 30+ workflow templates, priority support, and future templates for one low price.</p>
+            </div>
+            <a href="{{ url_for('marketplace.plans') }}" class="btn btn-warning btn-lg fw-bold">View Plans</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Categories -->
+    <div class="row g-3 mb-5">
+        {% for cat in categories %}
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ url_for('marketplace.category', slug=cat.slug) }}" class="text-decoration-none">
+                <div class="card h-100 border-secondary hover-shadow" style="cursor:pointer;">
+                    <div class="card-body text-center">
+                        <i class="{{ cat.icon }} fs-1 text-primary mb-2"></i>
+                        <h6 class="card-title">{{ cat.name }}</h6>
+                        <small class="text-secondary">{{ cat.templates|length }} templates</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Featured Templates -->
+    {% if featured %}
+    <h4 class="mb-3"><i class="bi bi-star-fill text-warning me-2"></i>Featured Templates</h4>
+    <div class="row g-4 mb-5">
+        {% for tmpl in featured %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-secondary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-{{ 'success' if tmpl.tier == 'free' else 'primary' if tmpl.tier == 'pro' else 'warning' if tmpl.tier == 'enterprise' else 'danger' }}">{{ tmpl.tier|upper }}</span>
+                        {% if tmpl.price > 0 %}
+                        <span class="fw-bold text-success">${{ "%.2f"|format(tmpl.price) }}</span>
+                        {% else %}
+                        <span class="fw-bold text-success">FREE</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{{ tmpl.name }}</h5>
+                    <p class="card-text text-secondary small">{{ tmpl.description[:120] }}{% if tmpl.description|length > 120 %}...{% endif %}</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-dark"><i class="bi bi-clock me-1"></i>{{ tmpl.estimated_time }}</span>
+                        <span class="badge bg-dark"><i class="bi bi-bar-chart me-1"></i>{{ tmpl.difficulty }}</span>
+                        {% if tmpl.rating > 0 %}
+                        <span class="badge bg-dark"><i class="bi bi-star-fill text-warning me-1"></i>{{ "%.1f"|format(tmpl.rating) }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{{ url_for('marketplace.template_detail', slug=tmpl.slug) }}" class="btn btn-primary w-100">View Template</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Popular Templates -->
+    {% if popular %}
+    <h4 class="mb-3"><i class="bi bi-fire text-danger me-2"></i>Most Popular</h4>
+    <div class="row g-4 mb-5">
+        {% for tmpl in popular %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-secondary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-{{ 'success' if tmpl.tier == 'free' else 'primary' if tmpl.tier == 'pro' else 'warning' }}">{{ tmpl.tier|upper }}</span>
+                        {% if tmpl.price > 0 %}
+                        <span class="fw-bold text-success">${{ "%.2f"|format(tmpl.price) }}</span>
+                        {% else %}
+                        <span class="fw-bold text-success">FREE</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{{ tmpl.name }}</h5>
+                    <p class="card-text text-secondary small">{{ tmpl.description[:120] }}{% if tmpl.description|length > 120 %}...{% endif %}</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-dark"><i class="bi bi-clock me-1"></i>{{ tmpl.estimated_time }}</span>
+                        <span class="badge bg-dark"><i class="bi bi-bar-chart me-1"></i>{{ tmpl.difficulty }}</span>
+                        <span class="badge bg-dark"><i class="bi bi-download me-1"></i>{{ tmpl.purchase_count or 0 }}</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{{ url_for('marketplace.template_detail', slug=tmpl.slug) }}" class="btn btn-outline-primary w-100">View Template</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Subscription Plans Preview -->
+    <div class="card border-secondary mt-4">
+        <div class="card-body text-center py-5">
+            <h4>Need More Power?</h4>
+            <p class="text-secondary">Unlock everything with a subscription plan.</p>
+            <a href="{{ url_for('marketplace.plans') }}" class="btn btn-warning btn-lg">Compare Plans</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

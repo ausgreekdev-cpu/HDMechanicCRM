@@ -4,3 +4,4 @@ from app.models.finance import *
 from app.models.inventory import *
 from app.models.customer import *
 from app.models.productivity import *
+from app.models.templates import *

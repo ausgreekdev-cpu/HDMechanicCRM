@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-3">
+            <li class="breadcrumb-item"><a href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
+            <li class="breadcrumb-item active">{{ category.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex align-items-center mb-4">
+        <i class="{{ category.icon }} fs-1 text-primary me-3"></i>
+        <div>
+            <h2 class="mb-0">{{ category.name }}</h2>
+            <p class="text-secondary mb-0">{{ category.description }}</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for tmpl in templates %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-secondary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-{{ 'success' if tmpl.tier == 'free' else 'primary' if tmpl.tier == 'pro' else 'warning' }}">{{ tmpl.tier|upper }}</span>
+                        {% if tmpl.price > 0 %}
+                        <span class="fw-bold text-success">${{ "%.2f"|format(tmpl.price) }}</span>
+                        {% else %}
+                        <span class="fw-bold text-success">FREE</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{{ tmpl.name }}</h5>
+                    <p class="card-text text-secondary small">{{ tmpl.description[:150] }}</p>
+                    <div class="d-flex gap-2 flex-wrap mb-3">
+                        <span class="badge bg-dark"><i class="bi bi-clock me-1"></i>{{ tmpl.estimated_time }}</span>
+                        <span class="badge bg-dark"><i class="bi bi-bar-chart me-1"></i>{{ tmpl.difficulty }}</span>
+                        {% if tmpl.rating > 0 %}
+                        <span class="badge bg-dark"><i class="bi bi-star-fill text-warning me-1"></i>{{ "%.1f"|format(tmpl.rating) }}</span>
+                        {% endif %}
+                        <span class="badge bg-dark"><i class="bi bi-download me-1"></i>{{ tmpl.purchase_count or 0 }}</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{{ url_for('marketplace.template_detail', slug=tmpl.slug) }}" class="btn btn-outline-primary w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not templates %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox fs-1 text-secondary"></i>
+        <p class="text-secondary mt-3">No templates in this category yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

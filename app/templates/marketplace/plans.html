@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-3">
+            <li class="breadcrumb-item"><a href="{{ url_for('marketplace.index') }}">Marketplace</a></li>
+            <li class="breadcrumb-item active">Plans</li>
+        </ol>
+    </nav>
+
+    <div class="text-center mb-5">
+        <h2>Choose Your Plan</h2>
+        <p class="text-secondary">Get access to all workflow templates and premium features.</p>
+        {% if user_plan %}
+        <div class="alert alert-success d-inline-block">
+            <i class="bi bi-check-circle me-2"></i>You're on the <strong>{{ user_plan.name }}</strong> plan
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        {% for plan in plans %}
+        <div class="col-md-4 col-lg-3">
+            <div class="card h-100 border-secondary {{ 'border-primary border-2' if plan.slug == 'pro' }}">
+                {% if plan.slug == 'pro' %}
+                <div class="card-header bg-primary text-center py-2">
+                    <strong>MOST POPULAR</strong>
+                </div>
+                {% endif %}
+                <div class="card-body text-center">
+                    <h4>{{ plan.name }}</h4>
+                    <div class="my-3">
+                        <span class="display-6 fw-bold">${{ "%.0f"|format(plan.price_monthly) }}</span>
+                        <span class="text-secondary">/month</span>
+                    </div>
+                    <p class="text-secondary small">${{ "%.0f"|format(plan.price_yearly) }}/year (save {{ ((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)|int }}%)</p>
+
+                    <ul class="list-unstyled text-start mt-3">
+                        {% for feat in plan.features %}
+                        <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>{{ feat }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent border-top-0 text-center">
+                    {% if user_plan and user_plan.id == plan.id %}
+                    <button class="btn btn-secondary w-100" disabled>Current Plan</button>
+                    {% else %}
+                    <form method="post" action="{{ url_for('marketplace.subscribe', plan_id=plan.id) }}">
+                        <input type="hidden" name="cycle" value="monthly" class="cycle-input">
+                        <button type="submit" class="btn btn-{{ 'primary' if plan.slug == 'pro' else 'outline-primary' }} w-100 btn-lg">
+                            Subscribe Now
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-4">
+        <small class="text-secondary">All plans include a 7-day free trial. Cancel anytime. No contracts.</small>
+    </div>
+
+    <!-- Per-Template Purchases Info -->
+    <div class="card border-secondary mt-5">
+        <div class="card-body text-center py-4">
+            <h5>Don't want a subscription?</h5>
+            <p class="text-secondary">Buy individual templates starting at $4.99 each. No subscription needed.</p>
+            <a href="{{ url_for('marketplace.index') }}" class="btn btn-outline-primary">Browse Templates</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
