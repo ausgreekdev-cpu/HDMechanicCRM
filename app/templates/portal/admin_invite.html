@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-person-plus me-2"></i>Invite Customer to Portal</h4>
+    <a href="/portal/admin/customers" class="btn btn-sm btn-outline-secondary">Back</a>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Customer</label>
+                        <select name="customer_id" class="form-select" required id="customerSelect">
+                            <option value="">Select a customer...</option>
+                            {% for c in customers %}
+                            <option value="{{ c.id }}" data-email="{{ c.email or '' }}">{{ c.name }} {% if c.email %}({{ c.email }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Portal Email (defaults to customer email)</label>
+                        <input type="email" name="email" class="form-control" id="portalEmail" placeholder="portal@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Temporary Password</label>
+                        <input type="text" name="temp_password" class="form-control" value="portal123">
+                        <small class="text-muted">Customer should change this on first login</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Create Portal Access</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

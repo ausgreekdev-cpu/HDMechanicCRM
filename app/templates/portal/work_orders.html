@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>My Work Orders</h4>
+    <div>
+        <a href="/portal/request-service" class="btn btn-sm btn-primary"><i class="bi bi-plus-circle me-1"></i>Request Service</a>
+        <a href="/portal/dashboard" class="btn btn-sm btn-outline-secondary">Back</a>
+    </div>
+</div>
+{% if work_orders %}
+<div class="card bg-dark text-white border-secondary">
+    <div class="card-body p-0">
+        <table class="table table-dark table-hover mb-0">
+            <thead><tr><th>#</th><th>Title</th><th>Vehicle</th><th>Status</th><th>Date</th><th>Total</th></tr></thead>
+            <tbody>
+            {% for wo in work_orders %}
+            <tr>
+                <td>{{ wo.id }}</td>
+                <td>{{ wo.title }}</td>
+                <td>{{ wo.vehicle.year }} {{ wo.vehicle.make }} {{ wo.vehicle.model }}</td>
+                <td><span class="badge bg-{{ 'success' if wo.status == 'Completed' else 'primary' if wo.status == 'In Progress' else 'warning' if wo.status == 'Waiting Parts' else 'danger' if wo.status == 'Cancelled' else 'secondary' }}">{{ wo.status }}</span></td>
+                <td class="text-secondary">{{ wo.created_at.strftime('%m/%d/%y') }}</td>
+                <td>${{ '%.2f'|format(wo.total_amount) }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card bg-dark text-white border-secondary"><div class="card-body text-center text-secondary py-5">
+    <i class="bi bi-clipboard fs-1 d-block mb-3"></i>
+    <h5>No Work Orders Yet</h5>
+    <p>Request service to get started.</p>
+    <a href="/portal/request-service" class="btn btn-primary">Request Service</a>
+</div></div>
+{% endif %}
+{% endblock %}

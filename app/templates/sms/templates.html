@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>SMS Templates</h4>
+    <a href="/sms/log" class="btn btn-sm btn-outline-secondary">Back to SMS Log</a>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Name</th><th>Category</th><th>Preview</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    {% for t in templates %}
+                    <tr>
+                        <td><strong>{{ t.name }}</strong></td>
+                        <td><span class="badge bg-secondary">{{ t.category }}</span></td>
+                        <td style="max-width:250px;"><small class="text-muted">{{ t.body_template[:80] }}{% if t.body_template|length > 80 %}...{% endif %}</small></td>
+                        <td><span class="badge bg-{{ 'success' if t.is_active else 'danger' }}">{{ 'Active' if t.is_active else 'Inactive' }}</span></td>
+                        <td>
+                            <form method="POST" action="/sms/templates/{{ t.id }}/delete" style="display:inline" onsubmit="return confirm('Delete this template?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not templates %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No templates yet</td></tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0">New Template</h6></div>
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" class="form-control" required placeholder="e.g. Appointment Reminder">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option>General</option>
+                            <option>Appointment</option>
+                            <option>Reminder</option>
+                            <option>Invoice</option>
+                            <option>Promo</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message Template</label>
+                        <textarea name="body_template" class="form-control" rows="4" required placeholder="Hi {{name}}, your vehicle is ready for pickup at HD Mechanic."></textarea>
+                        <small class="text-muted">Use variables like {{name}}, {{vehicle}}, {{date}}</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Create Template</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

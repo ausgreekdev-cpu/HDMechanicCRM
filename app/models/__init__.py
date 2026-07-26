@@ -5,3 +5,6 @@ from app.models.inventory import *
 from app.models.customer import *
 from app.models.productivity import *
 from app.models.templates import *
+from app.models.analytics import *
+from app.models.portal import *
+from app.models.sms import *

@@ -202,7 +202,12 @@
                         <div class="collapse" id="sec-crm">
                             <ul class="nav flex-column ps-3">
                                 <li><a href="/crm/email-log" class="nav-link text-white {{ 'active bg-primary' if ns.active == 'email_log' else '' }} py-1"><i class="bi bi-envelope me-2"></i><span class="menu-text">Email Log</span></a></li>
-                                <li><a href="/crm/sms-log" class="nav-link text-white {{ 'active bg-primary' if ns.active == 'sms_log' else '' }} py-1"><i class="bi bi-chat-dots me-2"></i><span class="menu-text">SMS Log</span></a></li>
+                                <li><a href="/sms/log" class="nav-link text-white {{ 'active bg-primary' if ns.active == 'sms_log' else '' }} py-1"><i class="bi bi-chat-dots me-2"></i><span class="menu-text">SMS Log</span></a></li>
+                                <li><a href="/sms/send" class="nav-link text-white py-1"><i class="bi bi-send me-2"></i><span class="menu-text">Send SMS</span></a></li>
+                                <li><a href="/sms/send-bulk" class="nav-link text-white py-1"><i class="bi bi-chat-left-text me-2"></i><span class="menu-text">Bulk SMS</span></a></li>
+                                <li><a href="/sms/templates" class="nav-link text-white py-1"><i class="bi bi-file-earmark-text me-2"></i><span class="menu-text">SMS Templates</span></a></li>
+                                <li><a href="/sms/schedule" class="nav-link text-white py-1"><i class="bi bi-clock me-2"></i><span class="menu-text">Schedule SMS</span></a></li>
+                                <li class="border-top border-secondary my-1"></li>
                                 <li><a href="/crm/surveys" class="nav-link text-white {{ 'active bg-primary' if ns.active == 'surveys' else '' }} py-1"><i class="bi bi-star me-2"></i><span class="menu-text">NPS Surveys</span></a></li>
                                 <li><a href="/crm/loyalty" class="nav-link text-white {{ 'active bg-primary' if ns.active == 'loyalty' else '' }} py-1"><i class="bi bi-award me-2"></i><span class="menu-text">Loyalty Tiers</span></a></li>
                             </ul>
@@ -252,7 +257,8 @@
                                         {% if unread_alerts > 0 %}<span class="badge bg-danger rounded-pill ms-auto">{{ unread_alerts }}</span>{% endif %}
                                     </a>
                                 </li>
-                                <li><a href="/portal/login" class="nav-link text-white py-1" target="_blank"><i class="bi bi-person-circle me-2"></i><span class="menu-text">Customer Portal</span></a></li>
+                                <li><a href="/portal/admin/customers" class="nav-link text-white py-1"><i class="bi bi-person-circle me-2"></i><span class="menu-text">Customer Portal</span></a></li>
+                                <li><a href="/admin/analytics" class="nav-link text-white {{ 'active bg-primary' if ns.active == 'analytics' else '' }} py-1"><i class="bi bi-bar-chart-line me-2"></i><span class="menu-text">Analytics</span></a></li>
                             </ul>
                         </div>
                     </li>
@@ -298,6 +304,15 @@
             {% endwith %}
             {% block content %}{% endblock %}
 {% block scripts %}{% endblock %}
+            <footer class="mt-auto py-3 px-4 border-top" style="background: var(--bg-body);">
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 text-secondary" style="font-size: 0.8rem;">
+                    <a href="/privacy" class="text-secondary text-decoration-none">Privacy Policy</a>
+                    <span>|</span>
+                    <a href="/terms" class="text-secondary text-decoration-none">Terms of Service</a>
+                    <span>|</span>
+                    <a href="/refund" class="text-secondary text-decoration-none">Refund Policy</a>
+                </div>
+            </footer>
         </main>
     </div>
 

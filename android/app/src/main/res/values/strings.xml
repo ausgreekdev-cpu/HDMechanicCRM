@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HDMechanicCRM</string>
+    <string name="app_description">All-in-one CRM for auto repair shops and scrap metal businesses. Manage work orders, customers, vehicles, inventory, invoicing, and scrap metal operations in one powerful app.</string>
+    <string name="app_short_description">CRM for auto repair &amp; scrap metal shops</string>
 </resources>

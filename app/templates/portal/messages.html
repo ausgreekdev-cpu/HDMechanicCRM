@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-envelope me-2"></i>Messages</h4>
+    <a href="/portal/dashboard" class="btn btn-sm btn-outline-secondary">Back</a>
+</div>
+
+<div class="card bg-dark text-white border-secondary mb-4">
+    <div class="card-header border-secondary"><h6 class="mb-0">Send a Message</h6></div>
+    <div class="card-body">
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+                <input type="text" name="subject" class="form-control bg-dark text-white border-secondary" placeholder="Subject" value="General Inquiry">
+            </div>
+            <div class="mb-3">
+                <textarea name="body" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="Type your message..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Send</button>
+        </form>
+    </div>
+</div>
+
+<div class="card bg-dark text-white border-secondary">
+    <div class="card-body p-0">
+        {% if messages %}
+        <div class="list-group list-group-flush">
+        {% for msg in messages %}
+            <div class="list-group-item bg-dark border-secondary">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div>
+                        <span class="badge bg-{{ 'primary' if msg.direction == 'customer' else 'success' }} me-2">{{ msg.direction|capitalize }}</span>
+                        <strong>{{ msg.subject }}</strong>
+                    </div>
+                    <small class="text-secondary">{{ msg.created_at.strftime('%m/%d/%y %I:%M %p') }}</small>
+                </div>
+                <div class="text-secondary small" style="white-space: pre-wrap;">{{ msg.body }}</div>
+            </div>
+        {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-secondary">No messages yet</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+  <Identity Name="HDMechanicCRM" Publisher="CN=HDMechanic" Version="1.0.0.0" />
+  <Properties>
+    <DisplayName>HDMechanicCRM</DisplayName>
+    <PublisherDisplayName>HDMechanic</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+  <Applications>
+    <Application Id="HDMechanicCRM" StartUri="https://hdmechaniccrm.onrender.com" Executable="EvergreenWebview.exe">
+      <uap:VisualElements DisplayName="HDMechanicCRM" Description="Auto repair &amp; scrap metal CRM" BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" />
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

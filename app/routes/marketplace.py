@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g, jsonify, session, abort
 from app.models.templates import (
@@ -6,6 +7,7 @@ from app.models.templates import (
     SubscriptionPlan, UserSubscription
 )
 from app.models.core import User
+from app.payments import stripe_enabled
 
 bp = Blueprint("marketplace", __name__, url_prefix="/marketplace")
 
@@ -107,6 +109,9 @@ def purchase_template(tid):
         flash("You already own this template", "info")
         return redirect(url_for("marketplace.template_detail", slug=tmpl.slug))
 
+    if stripe_enabled():
+        return redirect(url_for("stripe_webhooks.create_template_checkout_route", tid=tid))
+
     purchase = TemplatePurchase(
         user_id=session["user_id"],
         template_id=tid,
@@ -163,6 +168,9 @@ def subscribe(plan_id):
     if existing:
         flash("You already have an active subscription. Cancel it first.", "warning")
         return redirect(url_for("marketplace.plans"))
+
+    if stripe_enabled():
+        return redirect(url_for("stripe_webhooks.create_plan_checkout", plan_id=plan_id, cycle=cycle))
 
     sub = UserSubscription(
         user_id=session["user_id"],

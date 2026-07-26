@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% set active_page = "analytics" %}
+{% block content %}
+<div class="container-fluid">
+    <h4 class="mb-3"><i class="bi bi-bar-chart-line me-2"></i>Analytics Dashboard</h4>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-primary" id="statActiveSessions">-</div>
+                    <div class="text-muted small">Active Sessions</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-success" id="statPageViews">-</div>
+                    <div class="text-muted small">Page Views Today</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-info" id="statTotalSessions">-</div>
+                    <div class="text-muted small">Total Sessions Today</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-warning" id="statWorkOrders">-</div>
+                    <div class="text-muted small">New Work Orders Today</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header fw-semibold">Platform Breakdown (Today)</div>
+                <div class="card-body">
+                    <canvas id="platformChart" height="200"></canvas>
+                    <div id="platformEmpty" class="text-muted text-center d-none">No data for today</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header fw-semibold">Feature Usage (Top 10)</div>
+                <div class="card-body">
+                    <canvas id="featureChart" height="200"></canvas>
+                    <div id="featureEmpty" class="text-muted text-center d-none">No feature data yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header fw-semibold">New Customers Today</div>
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-secondary" id="statCustomers">-</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header fw-semibold">Recent Crash Reports (7 days)</div>
+                <div class="card-body" style="max-height:250px; overflow-y:auto;">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead><tr><th>Platform</th><th>Error</th><th>When</th></tr></thead>
+                        <tbody id="crashTable"></tbody>
+                    </table>
+                    <div id="crashEmpty" class="text-muted text-center">No crashes reported</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    const headers = token ? {'X-CSRFToken': token.getAttribute('content')} : {};
+
+    function fmt(n) { return n != null ? n.toLocaleString() : '-'; }
+
+    fetch('/api/analytics/dashboard', {headers: headers})
+        .then(function(r) { return r.ok ? r.json() : {}; })
+        .then(function(d) {
+            document.getElementById('statActiveSessions').textContent = fmt(d.active_sessions);
+            document.getElementById('statPageViews').textContent = fmt(d.total_pageviews_today);
+            document.getElementById('statTotalSessions').textContent = fmt(d.total_sessions_today);
+            document.getElementById('statWorkOrders').textContent = fmt(d.new_work_orders_today);
+            document.getElementById('statCustomers').textContent = fmt(d.new_customers_today);
+
+            var pb = d.platform_breakdown || {};
+            var pKeys = Object.keys(pb);
+            if (pKeys.length) {
+                new Chart(document.getElementById('platformChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: pKeys,
+                        datasets: [{data: pKeys.map(function(k){return pb[k];}), backgroundColor: ['#0d6efd','#198754','#ffc107','#dc3545','#6f42c1']}]
+                    }
+                });
+            } else {
+                document.getElementById('platformEmpty').classList.remove('d-none');
+            }
+
+            var tf = d.top_features || [];
+            if (tf.length) {
+                new Chart(document.getElementById('featureChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: tf.map(function(f){return f.feature + ' (' + f.count + ')';}),
+                        datasets: [{label: 'Uses', data: tf.map(function(f){return f.count;}), backgroundColor: '#0d6efd'}]
+                    },
+                    options: {indexAxis: 'y', plugins: {legend: {display: false}}, scales: {x: {beginAtZero: true}}}
+                });
+            } else {
+                document.getElementById('featureEmpty').classList.remove('d-none');
+            }
+
+            var crashes = d.recent_crashes || [];
+            var tbody = document.getElementById('crashTable');
+            if (crashes.length) {
+                crashes.forEach(function(c) {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = '<td>' + (c.platform||'-') + '</td><td class="text-truncate" style="max-width:200px;" title="' + (c.error_message||'') + '">' + (c.error_type||'-') + '</td><td>' + (c.reported_at ? new Date(c.reported_at).toLocaleDateString() : '-') + '</td>';
+                    tbody.appendChild(tr);
+                });
+            } else {
+                document.getElementById('crashEmpty').classList.remove('d-none');
+                tbody.parentElement.querySelector('thead').classList.add('d-none');
+            }
+        })
+        .catch(function() {
+            document.getElementById('statActiveSessions').textContent = 'N/A';
+        });
+})();
+</script>
+{% endblock %}

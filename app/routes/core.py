@@ -108,6 +108,13 @@ def admin_toggle_user(uid):
     return redirect("/admin/users")
 
 
+@bp.route("/admin/analytics")
+@login_required
+@admin_required
+def admin_analytics():
+    return render_template("admin/analytics.html", active_page="analytics")
+
+
 # ---- CSV Export ----
 @bp.route("/export/customers")
 @login_required
@@ -890,11 +897,6 @@ def health_check():
         return jsonify({"status": "healthy", "database": "connected"})
     except Exception as e:
         return jsonify({"status": "unhealthy", "error": str(e)}), 503
-
-
-@bp.route("/privacy")
-def privacy_policy():
-    return render_template("privacy.html")
 
 
 @bp.route("/data-deletion")

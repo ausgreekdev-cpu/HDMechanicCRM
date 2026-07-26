@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-chat-dots me-2"></i>SMS Log</h4>
+    <div>
+        <a href="/sms/send" class="btn btn-sm btn-primary"><i class="bi bi-send me-1"></i>Send SMS</a>
+        <a href="/sms/send-bulk" class="btn btn-sm btn-outline-primary">Bulk Send</a>
+        <a href="/sms/schedule" class="btn btn-sm btn-outline-info">Schedule</a>
+        <a href="/sms/templates" class="btn btn-sm btn-outline-secondary">Templates</a>
+    </div>
+</div>
+
+<div class="btn-group mb-3">
+    <a href="/sms/log" class="btn btn-sm btn-{{ 'primary' if not direction else 'outline-primary' }}">All</a>
+    <a href="/sms/log?direction=outbound" class="btn btn-sm btn-{{ 'primary' if direction == 'outbound' else 'outline-primary' }}">Outbound</a>
+    <a href="/sms/log?direction=inbound" class="btn btn-sm btn-{{ 'primary' if direction == 'inbound' else 'outline-primary' }}">Inbound</a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Direction</th><th>To/From</th><th>Message</th><th>Status</th><th>Sent</th></tr></thead>
+            <tbody>
+            {% for sms in p.items %}
+            <tr>
+                <td><span class="badge bg-{{ 'primary' if sms.direction == 'outbound' else 'success' }}">{{ sms.direction }}</span></td>
+                <td><code>{{ sms.to_number if sms.direction == 'outbound' else sms.from_number }}</code></td>
+                <td style="max-width:300px;">{{ sms.body[:100] }}{% if sms.body|length > 100 %}...{% endif %}</td>
+                <td><span class="badge bg-{{ 'success' if sms.status == 'sent' else 'warning' if sms.status == 'queued' else 'danger' }}">{{ sms.status }}</span></td>
+                <td class="text-muted">{{ sms.created_at.strftime('%m/%d/%y %I:%M %p') }}</td>
+            </tr>
+            {% endfor %}
+            {% if not p.items %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No SMS messages yet</td></tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    {% if p.pages > 1 %}
+    <div class="card-footer">
+        <nav><ul class="pagination pagination-sm mb-0">
+            {% for pg in range(1, p.pages + 1) %}
+            <li class="page-item {{ 'active' if pg == p.page }}"><a class="page-link" href="/sms/log?page={{ pg }}&direction={{ direction }}">{{ pg }}</a></li>
+            {% endfor %}
+        </ul></nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

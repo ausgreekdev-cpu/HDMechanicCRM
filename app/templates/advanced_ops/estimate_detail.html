@@ -3,6 +3,7 @@
 <div>{% if est.status == 'Draft' %}<form method="POST" action="/ops/estimates/{{ est.id }}/send" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-info">Send to Customer</button></form>{% endif %}
 {% if est.status == 'Sent' %}<form method="POST" action="/ops/estimates/{{ est.id }}/approve" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-success">Approve</button></form>{% endif %}
 {% if est.status == 'Approved' %}<form method="POST" action="/ops/estimates/{{ est.id }}/convert" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-primary">Convert to WO</button></form>{% endif %}
+{% if est.status in ('Approved', 'Sent') %}<a href="/ops/estimates/{{ est.id }}/preview-wo" class="btn btn-sm btn-outline-success"><i class="bi bi-eye me-1"></i>Preview WO</a><form method="POST" action="/ops/estimates/{{ est.id }}/convert-to-wo" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-primary" onclick="return confirm('Convert this estimate to a work order?')"><i class="bi bi-arrow-right-circle me-1"></i>Convert to WO</button></form>{% endif %}
 <a href="/ops/estimates" class="btn btn-sm btn-outline-secondary">Back</a></div></div>
 <div class="row"><div class="col-md-8">
 <div class="card mb-3"><div class="card-body">

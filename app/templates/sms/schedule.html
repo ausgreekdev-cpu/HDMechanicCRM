@@ -1,0 +1,46 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-clock me-2"></i>Schedule SMS</h4>
+    <a href="/sms/log" class="btn btn-sm btn-outline-secondary">Back to Log</a>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">To Number</label>
+                        <div class="input-group">
+                            <select class="form-select" onchange="document.getElementById('schedPhone').value=this.value">
+                                <option value="">Select customer...</option>
+                                {% for c in customers %}
+                                <option value="{{ c.phone }}">{{ c.name }} ({{ c.phone }})</option>
+                                {% endfor %}
+                            </select>
+                            <input type="tel" name="to_number" id="schedPhone" class="form-control" placeholder="+1234567890" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea name="body" class="form-control" rows="4" required placeholder="Your scheduled message..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Scheduled For</label>
+                        <input type="datetime-local" name="scheduled_for" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-info"><i class="bi bi-clock me-1"></i>Schedule SMS</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="bi bi-lightbulb me-2"></i>Tip</h6>
+                <small class="text-muted">Scheduled messages are stored in the queue and processed when the scheduler runs. Common uses: appointment reminders, follow-ups, and promotional messages.</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

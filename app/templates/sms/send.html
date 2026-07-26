@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-send me-2"></i>Send SMS</h4>
+    <a href="/sms/log" class="btn btn-sm btn-outline-secondary">Back to Log</a>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">To Number</label>
+                        <div class="input-group">
+                            <select id="customerPhone" class="form-select" onchange="document.getElementById('toNumber').value=this.value">
+                                <option value="">Select customer...</option>
+                                {% for c in customers %}
+                                <option value="{{ c.phone }}">{{ c.name }} ({{ c.phone }})</option>
+                                {% endfor %}
+                            </select>
+                            <input type="tel" name="to_number" id="toNumber" class="form-control" placeholder="+1234567890" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea name="body" class="form-control" rows="4" required placeholder="Type your SMS message..." maxlength="1600" id="smsBody" oninput="document.getElementById('charCount').textContent=this.value.length+'/1600'"></textarea>
+                        <small class="text-muted" id="charCount">0/1600</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Send SMS</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle me-2"></i>SMS Info</h6>
+                <small class="text-muted">
+                    <p>Messages are sent via Twilio when configured. If Twilio is not set up, messages are logged for review.</p>
+                    <p><strong>Required env vars:</strong><br>
+                    <code>CRM_TWILIO_SID</code><br>
+                    <code>CRM_TWILIO_AUTH</code><br>
+                    <code>CRM_TWILIO_PHONE</code></p>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

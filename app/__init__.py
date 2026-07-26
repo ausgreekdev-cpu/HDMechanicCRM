@@ -34,7 +34,7 @@ def create_app(config_override=None):
     if config_override:
         app.config.update(config_override)
 
-    CSRFProtect(app)
+    csrf = CSRFProtect(app)
 
     @app.before_request
     def open_session():
@@ -61,7 +61,9 @@ def create_app(config_override=None):
     from app.routes import (
         core, dashboard, customers, vehicles, work_orders, parts, scrap_metal,
         operations, communications, technicians, invoices, purchase_orders, dvi,
-        advanced_ops, finance, inventory_advanced, crm_advanced, marketplace
+        advanced_ops, finance, inventory_advanced, crm_advanced, marketplace,
+        customer_portal, sms_integration, quote_to_wo, terms, stripe_webhooks,
+        analytics_api
     )
 
     app.register_blueprint(core.bp)
@@ -82,5 +84,13 @@ def create_app(config_override=None):
     app.register_blueprint(inventory_advanced.bp)
     app.register_blueprint(crm_advanced.bp)
     app.register_blueprint(marketplace.bp)
+    app.register_blueprint(customer_portal.bp)
+    app.register_blueprint(sms_integration.bp)
+    app.register_blueprint(quote_to_wo.bp)
+    app.register_blueprint(terms.bp)
+    app.register_blueprint(stripe_webhooks.bp)
+    csrf.exempt(stripe_webhooks.bp)
+    app.register_blueprint(analytics_api.bp)
+    csrf.exempt(analytics_api.bp)
 
     return app
