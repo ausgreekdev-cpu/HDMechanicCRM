@@ -122,7 +122,7 @@ def create_subscription(customer_email, customer_name, plan_price_cents, plan_na
                             "cadence": "MONTHLY" if cycle_months == 1 else "ANNUALLY",
                             "recurring_price_money": {
                                 "amount": int(plan_price_cents),
-                                "currency": "USD",
+                                "currency": _cfg("CRM_SQUARE_CURRENCY", "AUD"),
                             },
                         }
                     ],

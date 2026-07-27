@@ -3,7 +3,9 @@ import json
 import logging
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g, jsonify, session, abort
+import os
 from app.payments_square import square_enabled, get_square_config, create_payment_link, create_subscription, cancel_subscription, verify_webhook_signature
+SQUARE_CURRENCY = os.environ.get("CRM_SQUARE_CURRENCY", "AUD")
 from app.models.templates import TemplatePurchase, SubscriptionPlan, UserSubscription, WorkflowTemplate
 
 logger = logging.getLogger(__name__)
@@ -39,7 +41,7 @@ def checkout_template(tid):
     success_url = url_for("square_payments.payment_success", source="template", item_id=tid, _external=True)
     result = create_payment_link(
         amount_cents=int(tmpl.price * 100),
-        currency="USD",
+        currency=SQUARE_CURRENCY,
         title=tmpl.name,
         description=tmpl.description[:200] if tmpl.description else "",
         redirect_url=success_url,
@@ -92,7 +94,7 @@ def checkout_plan(plan_id):
     success_url = url_for("square_payments.payment_success", source="subscription", item_id=plan_id, cycle=cycle, _external=True)
     result = create_payment_link(
         amount_cents=price_cents,
-        currency="USD",
+        currency=SQUARE_CURRENCY,
         title=f"{plan.name} ({cycle})",
         description=plan.description[:200] if plan.description else "",
         redirect_url=success_url,
