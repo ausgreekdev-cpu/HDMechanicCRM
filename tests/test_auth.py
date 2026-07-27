@@ -41,8 +41,8 @@ def test_login_invalid_credentials(client, db_session):
         "username": "nonexistent",
         "password": "wrong"
     }, follow_redirects=False)
-    assert resp.status_code == 302
-    assert "/login" in resp.headers["Location"]
+    assert resp.status_code == 200
+    assert b"Invalid" in resp.data or b"invalid" in resp.data
 
 
 def test_login_valid_credentials(client, db_session):
