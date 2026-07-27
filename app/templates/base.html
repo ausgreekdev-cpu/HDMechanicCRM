@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+<script>
+  (function() {
+    const theme = localStorage.getItem('crm-theme') || 'light';
+    document.documentElement.setAttribute('data-bs-theme', theme);
+  })();
+</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,9 +36,14 @@
                     <h5 class="mb-0"><i class="bi bi-tools me-2"></i><span class="brand-text">HD Mechanic</span></h5>
                     <small class="text-secondary brand-text">CRM & Operations</small>
                 </div>
-                <button class="btn btn-sm btn-outline-secondary border-0 text-white" id="sidebarToggle" title="Collapse sidebar">
-                    <i class="bi bi-list fs-5"></i>
-                </button>
+                <div class="d-flex">
+                    <button class="btn btn-sm btn-outline-secondary border-0 text-white" id="sidebarToggle" title="Collapse sidebar">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary border-0 text-white" id="themeToggle" title="Toggle dark mode" onclick="toggleTheme()">
+                        <i class="bi bi-moon fs-5"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="px-3 py-2 border-bottom border-secondary">
@@ -239,6 +250,7 @@
                     </li>
 
                     {# ---- ADMIN & SETTINGS ---- #}
+                    {% if current_user and current_user.role in ['admin', 'manager'] %}
                     <li class="nav-item mt-2 mb-0">
                         <a class="nav-link text-secondary px-2 py-1 accordion-toggle collapsed" data-bs-toggle="collapse" href="#sec-admin" role="button" aria-expanded="false">
                             <i class="bi bi-chevron-right me-1" style="font-size:0.7rem; transition:transform 0.2s;"></i><span class="menu-text" style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase;">Admin & Settings</span>
@@ -262,6 +274,7 @@
                             </ul>
                         </div>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
 
@@ -279,12 +292,10 @@
                     </div>
                 </div>
                 <div class="d-flex px-1">
-                    <div class="form-check form-switch me-2">
-                        <input class="form-check-input" type="checkbox" id="darkModeToggle" style="cursor:pointer;">
-                        <label class="form-check-label text-secondary small" for="darkModeToggle" style="font-size:0.75rem;">Dark</label>
-                    </div>
+                    {% if current_user and current_user.role in ['admin', 'manager'] %}
+                    <a href="/settings" class="nav-link text-white small px-2 mt-1"><i class="bi bi-gear me-1"></i><span class="menu-text">Settings</span></a>
+                    {% endif %}
                 </div>
-                <a href="/settings" class="nav-link text-white small px-2 mt-1"><i class="bi bi-gear me-1"></i><span class="menu-text">Settings</span></a>
                 <a href="/logout" class="nav-link text-white small px-2"><i class="bi bi-box-arrow-right me-1"></i><span class="menu-text">Logout</span></a>
             </div>
         </nav>
@@ -411,6 +422,22 @@
             }
         });
     })();
+    </script>
+    <script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-bs-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-bs-theme', next);
+        localStorage.setItem('crm-theme', next);
+        const icon = document.querySelector('#themeToggle i');
+        icon.className = next === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const theme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+        const icon = document.querySelector('#themeToggle i');
+        if (icon) icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+    });
     </script>
 </body>
 </html>

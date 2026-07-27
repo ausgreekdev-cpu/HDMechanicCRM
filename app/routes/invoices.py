@@ -59,6 +59,15 @@ def create_invoice():
             log_audit("create", "invoice", inv.id, f"Created invoice {inv.invoice_number}")
             customer_email = wo.customer.email if wo.customer else None
             notify_invoice_created(inv, customer_email)
+            if wo.customer and wo.customer.email:
+                from app.helpers import send_email
+                subject = f"Invoice #{inv.invoice_number} - HD Mechanic CRM"
+                body = f"""<h2>Invoice #{inv.invoice_number}</h2>
+<p>Dear {wo.customer.name},</p>
+<p>Your invoice for <strong>{wo.title}</strong> is ready.</p>
+<p><strong>Total: ${inv.total_amount:.2f}</strong></p>
+<p>Thank you for your business!</p>"""
+                send_email(wo.customer.email, subject, body)
             flash("Invoice created", "success")
             return redirect(f"/invoices/{inv.id}")
         flash("Work order not found", "warning")

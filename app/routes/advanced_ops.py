@@ -159,9 +159,9 @@ def send_estimate(eid):
     if est:
         est.status = "Sent"; db.commit()
         if est.customer and est.customer.email:
-            from app.notifications import send_email
-            send_email(est.customer.email, f"Estimate {est.estimate_number} from HD Mechanic CRM",
-                       f"Your estimate #{est.estimate_number} for ${est.total_amount:.2f} is ready for review.")
+            from app.helpers import send_email
+            body = f"<h2>Estimate {est.estimate_number}</h2><p>Your estimate #{est.estimate_number} for ${est.total_amount:.2f} is ready for review.</p>"
+            send_email(est.customer.email, f"Estimate {est.estimate_number} from HD Mechanic CRM", body)
         flash("Estimate sent to customer", "success")
     return redirect(f"/ops/estimates/{eid}")
 

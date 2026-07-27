@@ -71,10 +71,23 @@
     </div>
 </div>
 
-<div class="row g-4 mb-4">
-    <div class="col-md-4"><div class="card"><div class="card-header"><strong><i class="bi bi-graph-up me-2"></i>Revenue Trend</strong></div><div class="card-body"><canvas id="revenueChart" height="150"></canvas></div></div></div>
-    <div class="col-md-4"><div class="card"><div class="card-header"><strong><i class="bi bi-pie-chart me-2"></i>Work Orders</strong></div><div class="card-body"><canvas id="statusChart" height="150"></canvas></div></div></div>
-    <div class="col-md-4"><div class="card"><div class="card-header"><strong><i class="bi bi-cash-stack me-2"></i>Scrap Payouts</strong></div><div class="card-body"><canvas id="scrapChart" height="150"></canvas></div></div></div>
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Revenue Trend (6 months)</h6></div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Work Orders</h6></div>
+            <div class="card-body">
+                <canvas id="woStatusChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row g-4">
@@ -162,5 +175,38 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+new Chart(document.getElementById('revenueChart'), {
+    type: 'line',
+    data: {
+        labels: {{ chart_months | tojson }},
+        datasets: [{
+            label: 'Revenue ($)',
+            data: {{ chart_revenues | tojson }},
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13,110,253,0.1)',
+            fill: true,
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+new Chart(document.getElementById('woStatusChart'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ chart_wo_labels | tojson }},
+        datasets: [{
+            data: {{ chart_wo_counts | tojson }},
+            backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d', '#0dcaf0']
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+</script>
 <script>document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });</script>
 {% endblock %}
