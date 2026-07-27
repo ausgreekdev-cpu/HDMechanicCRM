@@ -1,11 +1,20 @@
 import os
-from flask import Flask, g, session, request
+import logging
+from datetime import datetime, timezone
+from flask import Flask, g, session, request, render_template
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from app.database import SessionLocal
 
 limiter = Limiter(key_func=get_remote_address)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("crm")
 
 
 def create_app(config_override=None):
@@ -41,6 +50,22 @@ def create_app(config_override=None):
     csrf = CSRFProtect(app)
     limiter.init_app(app)
 
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template("403.html", active_page=""), 403
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template("404.html", active_page=""), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        logger.exception("Internal server error")
+        return render_template("500.html", active_page=""), 500
+
+    _cache: dict = {}
+    _CACHE_TTL = 60
+
     @app.after_request
     def set_security_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -52,6 +77,22 @@ def create_app(config_override=None):
     @app.before_request
     def open_session():
         g.db = SessionLocal()
+        g._req_start = datetime.now(timezone.utc)
+        _path = request.path
+        _cached = _cache.get(_path)
+        if _cached and (datetime.now(timezone.utc) - _cached["ts"]).total_seconds() < _CACHE_TTL:
+            g._cached_dashboard = _cached["data"]
+
+    @app.after_request
+    def log_request(response):
+        if request.path.startswith("/static"):
+            return response
+        start = getattr(g, "_req_start", None)
+        if start:
+            ms = (datetime.now(timezone.utc) - start).total_seconds() * 1000
+            level = logging.WARNING if response.status_code >= 400 else logging.INFO
+            logger.log(level, "%s %s %s %.0fms", request.method, request.path, response.status_code, ms)
+        return response
 
     @app.teardown_request
     def close_session(exc=None):

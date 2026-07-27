@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, flash, Response, jsonify, g
 import logging, csv, io
 from datetime import datetime, date, timedelta
+from app.timeutils import utcnow
 from app.models import CreditMemo, Invoice, CustomerDeposit, Expense, WorkOrder, Budget, LateFeeRule, BankAccount, BankTransaction, Contractor1099, TaxExemption, Customer, WorkOrder, ScrapPickup, Payment
 from app.auth import login_required, role_required
 from app.audit import log_audit
@@ -26,7 +27,7 @@ def create_credit_memo():
     db = g.db
     try:
         count = db.query(CreditMemo).count() + 1
-        cm = CreditMemo(memo_number=f"CM-{datetime.utcnow().strftime('%Y%m')}-{count:04d}",
+        cm = CreditMemo(memo_number=f"CM-{utcnow().strftime('%Y%m')}-{count:04d}",
                         invoice_id=int(request.form.get("invoice_id", 0)) or None,
                         customer_id=int(request.form["customer_id"]),
                         amount=float(request.form["amount"]),
@@ -79,7 +80,7 @@ def create_deposit():
 @login_required
 def ar_aging():
     db = g.db
-    now = datetime.utcnow()
+    now = utcnow()
     invoices = db.query(Invoice).filter(Invoice.status.in_(["Unpaid", "Partial"])).order_by(Invoice.created_at).all()
     aging = {"0-30": [], "31-60": [], "61-90": [], "90+": []}
     for inv in invoices:
@@ -149,7 +150,7 @@ def job_costing():
 @login_required
 def list_budgets():
     db = g.db
-    year = int(request.args.get("year", datetime.utcnow().year))
+    year = int(request.args.get("year", utcnow().year))
     budgets = db.query(Budget).filter(Budget.year == year).order_by(Budget.category).all()
     revenue = db.query(func.sum(WorkOrder.total_amount)).filter(
         func.strftime("%Y", WorkOrder.updated_at) == str(year),
@@ -208,7 +209,7 @@ def apply_late_fees():
     db = g.db
     try:
         rules = db.query(LateFeeRule).filter(LateFeeRule.is_active == True).all()
-        now = datetime.utcnow()
+        now = utcnow()
         applied = 0
         for rule in rules:
             overdue = db.query(Invoice).filter(
@@ -343,7 +344,7 @@ def create_tax_exemption():
 def revenue_by_category():
     db = g.db
     from sqlalchemy import func
-    year = int(request.args.get("year", datetime.utcnow().year))
+    year = int(request.args.get("year", utcnow().year))
     revenue = db.query(func.sum(WorkOrder.total_amount)).filter(
         func.strftime("%Y", WorkOrder.updated_at) == str(year),
         WorkOrder.status.in_(["Completed", "Invoiced"])).scalar() or 0

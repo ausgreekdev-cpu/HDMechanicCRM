@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, g
 from sqlalchemy import func
 from datetime import datetime
+from app.timeutils import utcnow
 from app.models import Customer, Vehicle, WorkOrder, Part, ScrapPickup, Lead, Technician, Schedule, ScrapInventory, Alert
 from app.auth import login_required
 
@@ -18,12 +19,12 @@ def dashboard():
     ).count()
     completed_this_month = db.query(WorkOrder).filter(
         WorkOrder.status == "Completed",
-        func.strftime("%Y-%m", WorkOrder.updated_at) == datetime.utcnow().strftime("%Y-%m")
+        func.strftime("%Y-%m", WorkOrder.updated_at) == utcnow().strftime("%Y-%m")
     ).count()
     low_stock_parts = db.query(Part).filter(Part.quantity_on_hand <= Part.min_quantity).count()
     total_parts = db.query(Part).count()
     scrap_pickups_month = db.query(ScrapPickup).filter(
-        func.strftime("%Y-%m", ScrapPickup.pickup_date) == datetime.utcnow().strftime("%Y-%m")
+        func.strftime("%Y-%m", ScrapPickup.pickup_date) == utcnow().strftime("%Y-%m")
     ).count()
     open_leads = db.query(Lead).filter(Lead.status.not_in(["Closed", "Converted"])).count()
     tech_count = db.query(Technician).filter(Technician.is_active == True).count()
@@ -33,7 +34,7 @@ def dashboard():
     recent_work_orders = db.query(WorkOrder).order_by(WorkOrder.created_at.desc()).limit(5).all()
     recent_pickups = db.query(ScrapPickup).order_by(ScrapPickup.created_at.desc()).limit(5).all()
     today_schedule = db.query(Schedule).filter(
-        Schedule.scheduled_date == datetime.utcnow().date()
+        Schedule.scheduled_date == utcnow().date()
     ).order_by(Schedule.start_time).all()
     dashboard_alerts = db.query(Alert).filter(Alert.is_read == False).order_by(
         Alert.created_at.desc()).limit(5).all()

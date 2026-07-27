@@ -1,10 +1,12 @@
 import os, logging
 from datetime import datetime
+from app.timeutils import utcnow
 from flask import Blueprint, render_template, request, redirect, flash, g, jsonify
 from app.models import SMSMessage, SMSTemplate, SMSQueue, Customer
 from app.auth import login_required, admin_required
 from app.helpers import paginate
 from app.audit import log_audit
+from app import limiter
 
 bp = Blueprint("sms_integration", __name__, url_prefix="/sms")
 
@@ -36,6 +38,7 @@ def _get_or_create_portal_user_by_phone(db, phone):
 
 @bp.route("/send", methods=["GET", "POST"])
 @login_required
+@limiter.limit("20/minute")
 def send():
     db = g.db
     if request.method == "POST":
@@ -48,7 +51,7 @@ def send():
         status = "sent" if external_id else "logged"
         sms = SMSMessage(to_number=to_number, from_number=os.environ.get("CRM_TWILIO_PHONE", ""),
                          body=body, status=status, direction="outbound", external_id=external_id,
-                         sent_at=datetime.utcnow() if external_id else None)
+                         sent_at=utcnow() if external_id else None)
         db.add(sms)
         db.commit()
         log_audit("send", "sms", sms.id, f"SMS to {to_number}")
@@ -60,6 +63,7 @@ def send():
 
 @bp.route("/send-bulk", methods=["GET", "POST"])
 @login_required
+@limiter.limit("5/minute")
 def send_bulk():
     db = g.db
     if request.method == "POST":
@@ -81,7 +85,7 @@ def send_bulk():
                 status = "sent" if external_id else "logged"
                 sms = SMSMessage(to_number=num, from_number=os.environ.get("CRM_TWILIO_PHONE", ""),
                                  body=body, status=status, direction="outbound", external_id=external_id,
-                                 sent_at=datetime.utcnow() if external_id else None)
+                                 sent_at=utcnow() if external_id else None)
                 db.add(sms)
                 count += 1
         db.commit()
@@ -168,7 +172,7 @@ def sms_webhook():
         if sms:
             sms.status = status
             if status == "delivered":
-                sms.delivered_at = datetime.utcnow()
+                sms.delivered_at = utcnow()
             db.commit()
     except Exception:
         logging.exception("SMS webhook error")

@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, date, timedelta
+from app.timeutils import utcnow
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.database import SessionLocal
 from app.models import (
@@ -32,14 +33,14 @@ def auto_invoice_completed():
             count = db.query(Invoice).count() + 1
             inv = Invoice(
                 work_order_id=wo.id,
-                invoice_number=f"INV-{datetime.utcnow().strftime('%Y%m')}-{count:04d}",
+                invoice_number=f"INV-{utcnow().strftime('%Y%m')}-{count:04d}",
                 subtotal=wo.total_amount, tax_rate=0, tax_amount=0,
                 total_amount=wo.total_amount, status="Unpaid"
             )
             db.add(inv)
             wo.status = "Invoiced"
             _create_alert("invoice_created", f"Invoice auto-generated for {wo.title}",
-                          f"WO #{wo.id} completed — invoice INV-{datetime.utcnow().strftime('%Y%m')}-{count:04d} created",
+                          f"WO #{wo.id} completed — invoice INV-{utcnow().strftime('%Y%m')}-{count:04d} created",
                           "success", wo.id, "work_order")
         db.commit()
         if wos:
@@ -104,7 +105,7 @@ def check_service_reminders():
 def check_overdue_invoices():
     db = SessionLocal()
     try:
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        thirty_days_ago = utcnow() - timedelta(days=30)
         invoices = db.query(Invoice).filter(
             Invoice.status == "Unpaid", Invoice.created_at <= thirty_days_ago
         ).all()
@@ -126,7 +127,7 @@ def check_overdue_invoices():
 def check_inactive_customers():
     db = SessionLocal()
     try:
-        ninety_days_ago = datetime.utcnow() - timedelta(days=90)
+        ninety_days_ago = utcnow() - timedelta(days=90)
         customers = db.query(Customer).filter(
             Customer.updated_at <= ninety_days_ago
         ).all()
@@ -214,7 +215,7 @@ def watch_scrap_prices():
 def cleanup_data():
     db = SessionLocal()
     try:
-        old = datetime.utcnow() - timedelta(days=90)
+        old = utcnow() - timedelta(days=90)
         db.query(Alert).filter(Alert.is_read == True, Alert.created_at <= old).delete()
         db.commit()
         db.execute("VACUUM")
@@ -244,7 +245,7 @@ def generate_recurring_work_orders():
             )
             db.add(wo)
             db.flush()
-            r.last_generated = datetime.utcnow()
+            r.last_generated = utcnow()
             if r.interval_days:
                 r.next_due_date = today + timedelta(days=r.interval_days)
         if items:

@@ -14,6 +14,7 @@ import hashlib
 import hmac
 import logging
 from datetime import datetime, timedelta
+from app.timeutils import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -45,12 +46,12 @@ def get_square_config():
 
 def create_payment_link(amount_cents, currency, title, description, redirect_url, metadata=None):
     if not square_enabled():
-        return {"url": redirect_url, "demo": True, "payment_id": f"sq_demo_{int(datetime.utcnow().timestamp())}"}
+        return {"url": redirect_url, "demo": True, "payment_id": f"sq_demo_{int(utcnow().timestamp())}"}
 
     client = _client()
     result = client.checkout.create_payment_link(
         body={
-            "idempotency_key": f"tmpl_{int(datetime.utcnow().timestamp() * 1000)}",
+            "idempotency_key": f"tmpl_{int(utcnow().timestamp() * 1000)}",
             "quick_pay": {
                 "name": title,
                 "price_money": {"amount": int(amount_cents), "currency": currency},
@@ -68,15 +69,15 @@ def create_payment_link(amount_cents, currency, title, description, redirect_url
 
 def create_invoice(customer_name, customer_email, amount_cents, currency, title, description, due_date_days=30):
     if not square_enabled():
-        return {"demo": True, "invoice_id": f"sq_inv_demo_{int(datetime.utcnow().timestamp())}"}
+        return {"demo": True, "invoice_id": f"sq_inv_demo_{int(utcnow().timestamp())}"}
 
     client = _client()
     customer_id = _find_or_create_customer(client, customer_name, customer_email)
-    due_date = (datetime.utcnow() + timedelta(days=due_date_days)).strftime("%Y-%m-%d")
+    due_date = (utcnow() + timedelta(days=due_date_days)).strftime("%Y-%m-%d")
 
     result = client.invoices.create_invoice(
         body={
-            "idempotency_key": f"inv_{int(datetime.utcnow().timestamp() * 1000)}",
+            "idempotency_key": f"inv_{int(utcnow().timestamp() * 1000)}",
             "invoice": {
                 "location_id": _cfg("CRM_SQUARE_LOCATION_ID"),
                 "customer_id": customer_id,
@@ -105,14 +106,14 @@ def create_invoice(customer_name, customer_email, amount_cents, currency, title,
 
 def create_subscription(customer_email, customer_name, plan_price_cents, plan_name, cycle_months=1):
     if not square_enabled():
-        return {"demo": True, "subscription_id": f"sq_sub_demo_{int(datetime.utcnow().timestamp())}"}
+        return {"demo": True, "subscription_id": f"sq_sub_demo_{int(utcnow().timestamp())}"}
 
     client = _client()
     customer_id = _find_or_create_customer(client, customer_name, customer_email)
 
     result = client.catalog.upsert_object(
         body={
-            "idempotency_key": f"sub_{int(datetime.utcnow().timestamp() * 1000)}",
+            "idempotency_key": f"sub_{int(utcnow().timestamp() * 1000)}",
             "object": {
                 "type": "SUBSCRIPTION_PLAN",
                 "subscription_plan_data": {
@@ -134,11 +135,11 @@ def create_subscription(customer_email, customer_name, plan_price_cents, plan_na
         plan_id = result.body["id_mappings"][0]["object_id"]
         sub_result = client.subscriptions.create_subscription(
             body={
-                "idempotency_key": f"sub_create_{int(datetime.utcnow().timestamp() * 1000)}",
+                "idempotency_key": f"sub_create_{int(utcnow().timestamp() * 1000)}",
                 "location_id": _cfg("CRM_SQUARE_LOCATION_ID"),
                 "customer_id": customer_id,
                 "plan_id": plan_id,
-                "start_date": datetime.utcnow().strftime("%Y-%m-%d"),
+                "start_date": utcnow().strftime("%Y-%m-%d"),
             }
         )
         if sub_result.is_success():
@@ -173,7 +174,7 @@ def _find_or_create_customer(client, name, email):
 
     result = client.customers.create_customer(
         body={
-            "idempotency_key": f"cust_{int(datetime.utcnow().timestamp() * 1000)}",
+            "idempotency_key": f"cust_{int(utcnow().timestamp() * 1000)}",
             "given_name": name.split()[0] if name else "Customer",
             "family_name": " ".join(name.split()[1:]) if len(name.split()) > 1 else "",
             "email_address": email,

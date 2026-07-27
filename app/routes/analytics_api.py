@@ -1,8 +1,10 @@
 import logging
 from datetime import datetime, timedelta
+from app.timeutils import utcnow
 from flask import Blueprint, request, g, jsonify, session
 from sqlalchemy import func
 from app.auth import login_required, admin_required
+from app import limiter
 
 bp = Blueprint("analytics_api", __name__, url_prefix="/api/analytics")
 
@@ -31,11 +33,11 @@ def _get_or_create_session(data):
             AppSession.platform == platform,
             AppSession.is_active == True
         ).order_by(AppSession.started_at.desc()).first()
-        if existing and (datetime.utcnow() - (existing.last_active_at or existing.started_at)).total_seconds() > 1800:
+        if existing and (utcnow() - (existing.last_active_at or existing.started_at)).total_seconds() > 1800:
             existing = None
 
     if existing:
-        existing.last_active_at = datetime.utcnow()
+        existing.last_active_at = utcnow()
         if app_version and app_version != "unknown":
             existing.app_version = app_version
         if device_info:
@@ -46,8 +48,8 @@ def _get_or_create_session(data):
             platform=platform,
             app_version=app_version,
             device_info=device_info,
-            started_at=datetime.utcnow(),
-            last_active_at=datetime.utcnow(),
+            started_at=utcnow(),
+            last_active_at=utcnow(),
             page_views=0,
             is_active=True,
         )
@@ -58,6 +60,7 @@ def _get_or_create_session(data):
 
 
 @bp.route("/session", methods=["POST"])
+@limiter.limit("60/minute")
 def create_session():
     try:
         data = request.get_json(force=True, silent=True) or {}
@@ -69,6 +72,7 @@ def create_session():
 
 
 @bp.route("/pageview", methods=["POST"])
+@limiter.limit("120/minute")
 def record_pageview():
     try:
         from app.models.analytics import PageView, AppSession
@@ -85,7 +89,7 @@ def record_pageview():
             app_session = db.query(AppSession).filter(AppSession.id == session_id).first()
             if app_session:
                 app_session.page_views = (app_session.page_views or 0) + 1
-                app_session.last_active_at = datetime.utcnow()
+                app_session.last_active_at = utcnow()
 
         pv = PageView(
             session_id=session_id,
@@ -93,7 +97,7 @@ def record_pageview():
             path=path,
             load_time_ms=load_time_ms,
             platform=platform,
-            created_at=datetime.utcnow(),
+            created_at=utcnow(),
         )
         db.add(pv)
         db.commit()
@@ -124,14 +128,14 @@ def record_feature():
 
         if existing:
             existing.count = (existing.count or 0) + 1
-            existing.last_used_at = datetime.utcnow()
+            existing.last_used_at = utcnow()
         else:
             existing = FeatureUsage(
                 user_id=user_id,
                 feature=feature,
                 action=action,
                 count=1,
-                last_used_at=datetime.utcnow(),
+                last_used_at=utcnow(),
             )
             db.add(existing)
 
@@ -143,6 +147,7 @@ def record_feature():
 
 
 @bp.route("/crash", methods=["POST"])
+@limiter.limit("10/minute")
 def report_crash():
     try:
         from app.models.analytics import CrashReport
@@ -156,7 +161,7 @@ def report_crash():
             error_message=data.get("error_message", ""),
             stack_trace=data.get("stack_trace", ""),
             device_info=data.get("device_info", ""),
-            reported_at=datetime.utcnow(),
+            reported_at=utcnow(),
         )
         db.add(report)
         db.commit()
@@ -167,6 +172,7 @@ def report_crash():
 
 
 @bp.route("/heartbeat", methods=["POST"])
+@limiter.limit("60/minute")
 def heartbeat():
     try:
         from app.models.analytics import AppSession
@@ -184,7 +190,7 @@ def heartbeat():
         ).first()
 
         if app_session:
-            app_session.last_active_at = datetime.utcnow()
+            app_session.last_active_at = utcnow()
             db.commit()
             return jsonify({"ok": True})
         else:
@@ -202,12 +208,12 @@ def dashboard():
     from app.models.analytics import AppSession, PageView, FeatureUsage, DailyMetrics
     from app.models import WorkOrder, Customer
     db = g.db
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today = utcnow().strftime("%Y-%m-%d")
+    today_start = utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
     active_sessions = db.query(func.count(AppSession.id)).filter(
         AppSession.is_active == True,
-        AppSession.last_active_at >= datetime.utcnow() - timedelta(minutes=30),
+        AppSession.last_active_at >= utcnow() - timedelta(minutes=30),
     ).scalar() or 0
 
     total_sessions_today = db.query(func.count(AppSession.id)).filter(
@@ -229,7 +235,7 @@ def dashboard():
     ).order_by(func.sum(FeatureUsage.count).desc()).limit(10).all()
 
     recent_crashes = db.query(CrashReport).filter(
-        CrashReport.reported_at >= datetime.utcnow() - timedelta(days=7),
+        CrashReport.reported_at >= utcnow() - timedelta(days=7),
     ).order_by(CrashReport.reported_at.desc()).limit(10).all()
 
     new_orders_today = db.query(func.count(WorkOrder.id)).filter(
@@ -268,7 +274,7 @@ def features():
     from app.models.analytics import FeatureUsage
     db = g.db
     days = request.args.get("days", 30, type=int)
-    since = datetime.utcnow() - timedelta(days=days)
+    since = utcnow() - timedelta(days=days)
 
     features = db.query(
         FeatureUsage.feature,
@@ -295,7 +301,7 @@ def daily():
     from app.models.analytics import DailyMetrics
     db = g.db
     days = request.args.get("days", 30, type=int)
-    since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
+    since = (utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
 
     metrics = db.query(DailyMetrics).filter(
         DailyMetrics.metric_date >= since,

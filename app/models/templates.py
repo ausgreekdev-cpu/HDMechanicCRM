@@ -1,5 +1,6 @@
 import enum
 from datetime import datetime, timedelta
+from app.timeutils import utcnow
 from sqlalchemy import (
     Column, Integer, String, Text, Float, Boolean, DateTime, Date,
     ForeignKey, Enum as SAEnum, JSON
@@ -119,7 +120,7 @@ class UserSubscription(Base):
     def is_active(self):
         if self.status in ("canceled", "past_due"):
             return False
-        if self.current_period_end and self.current_period_end < datetime.utcnow():
+        if self.current_period_end and self.current_period_end < utcnow():
             return False
         return True
 
@@ -127,5 +128,5 @@ class UserSubscription(Base):
     def days_remaining(self):
         if not self.current_period_end:
             return 0
-        delta = self.current_period_end - datetime.utcnow()
+        delta = self.current_period_end - utcnow()
         return max(0, delta.days)

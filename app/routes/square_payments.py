@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from datetime import datetime, timedelta
+from app.timeutils import utcnow
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g, jsonify, session, abort
 import os
 from app.payments_square import square_enabled, get_square_config, create_payment_link, create_subscription, cancel_subscription, verify_webhook_signature
@@ -111,8 +112,8 @@ def checkout_plan(plan_id):
             billing_cycle=cycle,
             status="active",
             stripe_subscription_id=result.get("subscription_id", ""),
-            current_period_start=datetime.utcnow(),
-            current_period_end=datetime.utcnow() + timedelta(days=30 if cycle == "monthly" else 365),
+            current_period_start=utcnow(),
+            current_period_end=utcnow() + timedelta(days=30 if cycle == "monthly" else 365),
         )
         g.db.add(sub)
         g.db.commit()
@@ -162,8 +163,8 @@ def payment_success():
                     plan_id=plan.id,
                     billing_cycle=cycle,
                     status="active",
-                    current_period_start=datetime.utcnow(),
-                    current_period_end=datetime.utcnow() + timedelta(days=30 if cycle == "monthly" else 365),
+                    current_period_start=utcnow(),
+                    current_period_end=utcnow() + timedelta(days=30 if cycle == "monthly" else 365),
                 )
                 g.db.add(sub)
                 g.db.commit()

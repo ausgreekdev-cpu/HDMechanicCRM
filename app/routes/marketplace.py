@@ -8,6 +8,7 @@ from app.models.templates import (
 )
 from app.models.core import User
 from app.payments_square import square_enabled
+from app import limiter
 
 bp = Blueprint("marketplace", __name__, url_prefix="/marketplace")
 
@@ -91,6 +92,7 @@ def template_detail(slug):
 
 
 @bp.route("/template/<int:tid>/purchase", methods=["POST"])
+@limiter.limit("5/minute")
 def purchase_template(tid):
     if "user_id" not in session:
         flash("Please sign in to purchase templates", "warning")
@@ -137,6 +139,7 @@ def plans():
 
 
 @bp.route("/subscribe/<int:plan_id>", methods=["POST"])
+@limiter.limit("3/minute")
 def subscribe(plan_id):
     if "user_id" not in session:
         flash("Please sign in to subscribe", "warning")

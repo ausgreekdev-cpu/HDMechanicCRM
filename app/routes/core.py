@@ -1,5 +1,6 @@
 import os, csv, io, uuid, shutil, logging
 from datetime import datetime, timedelta
+from app.timeutils import utcnow
 from flask import Blueprint, redirect, session, render_template, request, flash, jsonify, send_file, g
 from app.auth import hash_password, verify_password, login_required, admin_required
 from app.export import export_csv
@@ -202,7 +203,7 @@ def reports():
     from app.models import Customer, WorkOrder, Part, ScrapPickup, Invoice, Lead
     from sqlalchemy import func
     db = g.db
-    now = datetime.utcnow()
+    now = utcnow()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     revenue = db.query(func.sum(WorkOrder.total_amount)).filter(
@@ -576,7 +577,7 @@ def generate_from_recurring(rid):
             )
             db.add(wo)
             db.flush()
-            r.last_generated = datetime.utcnow()
+            r.last_generated = utcnow()
             if r.interval_days:
                 r.next_due_date = dt_date.today() + timedelta(days=r.interval_days)
             db.commit()
@@ -684,7 +685,7 @@ def quickbooks_import():
                     except ValueError:
                         paid = None
                     inv.status = "Paid"
-                    inv.paid_at = datetime.combine(paid, datetime.min.time()) if paid else datetime.utcnow()
+                    inv.paid_at = datetime.combine(paid, datetime.min.time()) if paid else utcnow()
                     count += 1
         db.commit()
         flash(f"Synced {count} invoices from QuickBooks", "success")
@@ -789,7 +790,7 @@ def kanban_update():
         if wo and new_status:
             wo.status = new_status
             if new_status == "Completed" and not wo.completed_at:
-                wo.completed_at = datetime.utcnow()
+                wo.completed_at = utcnow()
             db.commit()
             return jsonify({"ok": True})
         return jsonify({"ok": False}), 400

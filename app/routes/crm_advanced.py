@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, flash, jsonify, send_file, g
 import logging, json
 from datetime import datetime, date, timedelta
+from app.timeutils import utcnow
 from app.models import EmailLog, SMSLog, CustomerSurvey, CustomerLoyaltyTier, Appointment, TimeEntry, Technician, LaborStandard, SavedFilter, User, DashboardWidget, WorkflowRule, TechnicianCertification, ShopSupply, SDSDocument, WorkOrder, Vehicle, CheckInRecord, EnvironmentalRecord, NonStockItem, Customer, FuelRecord, TireRecord, DieselEmissionRecord, DOTInspection, ServiceReminder
 from app.auth import login_required, role_required
 from app.audit import log_audit
@@ -188,7 +189,7 @@ def clock_in():
     try:
         te = TimeEntry(work_order_id=int(request.form.get("work_order_id", 0)) or None,
                        technician_id=int(request.form["technician_id"]),
-                       clock_in=datetime.utcnow(), notes=request.form.get("notes", ""))
+                       clock_in=utcnow(), notes=request.form.get("notes", ""))
         db.add(te); db.commit()
         log_audit("clock_in", "time_entry", te.id, f"Tech #{te.technician_id} clocked in")
         flash("Clocked in", "success")
@@ -203,7 +204,7 @@ def clock_out(tid):
     db = g.db
     te = db.query(TimeEntry).filter(TimeEntry.id == tid).first()
     if te:
-        te.clock_out = datetime.utcnow()
+        te.clock_out = utcnow()
         delta = te.clock_out - te.clock_in
         te.total_hours = round(delta.total_seconds() / 3600, 2)
         db.commit()
@@ -483,7 +484,7 @@ def bulk_operation(entity):
             db.query(Invoice).filter(Invoice.id.in_([int(i) for i in ids])).delete(synchronize_session=False)
         elif entity == "invoices" and action == "mark_paid":
             db.query(Invoice).filter(Invoice.id.in_([int(i) for i in ids])).update(
-                {"status": "Paid", "paid_at": datetime.utcnow()}, synchronize_session=False)
+                {"status": "Paid", "paid_at": utcnow()}, synchronize_session=False)
         elif entity == "customers" and action == "delete":
             db.query(Customer).filter(Customer.id.in_([int(i) for i in ids])).delete(synchronize_session=False)
         db.commit()

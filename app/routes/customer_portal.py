@@ -1,5 +1,6 @@
 import os, secrets, logging
 from datetime import datetime, timedelta
+from app.timeutils import utcnow
 from flask import Blueprint, render_template, request, redirect, flash, g, session, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import Customer, Vehicle, WorkOrder, Invoice, CustomerPortalUser, CustomerPortalToken, CustomerPortalMessage
@@ -42,7 +43,7 @@ def portal_login():
         ).first()
         if user and check_password_hash(user.password_hash, password):
             session["portal_user_id"] = user.id
-            user.last_login = datetime.utcnow()
+            user.last_login = utcnow()
             db.commit()
             return redirect("/portal/dashboard")
         flash("Invalid email or password", "danger")
@@ -55,14 +56,14 @@ def portal_token_login(token):
     pt = db.query(CustomerPortalToken).filter(
         CustomerPortalToken.token == token,
         CustomerPortalToken.is_used == False,
-        CustomerPortalToken.expires_at > datetime.utcnow()
+        CustomerPortalToken.expires_at > utcnow()
     ).first()
     if not pt:
         flash("Invalid or expired link", "danger")
         return redirect("/portal/login")
     pt.is_used = True
     session["portal_user_id"] = pt.portal_user.id
-    pt.portal_user.last_login = datetime.utcnow()
+    pt.portal_user.last_login = utcnow()
     db.commit()
     flash("Welcome to your portal!", "success")
     return redirect("/portal/dashboard")
@@ -204,7 +205,7 @@ def admin_invite():
         if existing:
             token = secrets.token_hex(32)
             pt = CustomerPortalToken(portal_user_id=existing.id, token=token,
-                                     expires_at=datetime.utcnow() + timedelta(days=7))
+                                     expires_at=utcnow() + timedelta(days=7))
             db.add(pt)
             db.commit()
             log_audit("invite", "portal", existing.id, f"Sent portal invite to {email}")
@@ -217,7 +218,7 @@ def admin_invite():
         db.flush()
         token = secrets.token_hex(32)
         pt = CustomerPortalToken(portal_user_id=pu.id, token=token,
-                                 expires_at=datetime.utcnow() + timedelta(days=7))
+                                 expires_at=utcnow() + timedelta(days=7))
         db.add(pt)
         db.commit()
         log_audit("create", "portal_user", pu.id, f"Created portal user for {customer.name}")

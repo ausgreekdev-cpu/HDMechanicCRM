@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, flash, jsonify, g
 import logging
 from datetime import datetime, date, timedelta
+from app.timeutils import utcnow
 from app.models import Company, Estimate, EstimateItem, CoreCharge, CoreReturn, Warranty, WarrantyClaim, Vendor, VendorQuote, DieselEmissionRecord, TPMContract, FleetGroup, FleetVehicle, FuelRecord, EquipmentHourMeter, DOTInspection, ELDLog, TireRecord, PartCrossReference, Customer, Vehicle, WorkOrder, WorkOrderItem
 from app.auth import login_required, role_required
 from app.audit import log_audit
@@ -72,7 +73,7 @@ def create_estimate():
     db = g.db
     try:
         count = db.query(Estimate).count() + 1
-        est = Estimate(estimate_number=f"EST-{datetime.utcnow().strftime('%Y%m')}-{count:04d}",
+        est = Estimate(estimate_number=f"EST-{utcnow().strftime('%Y%m')}-{count:04d}",
                        customer_id=int(request.form["customer_id"]), vehicle_id=int(request.form["vehicle_id"]),
                        title=request.form["title"], description=request.form.get("description", ""),
                        labor_hours=float(request.form.get("labor_hours", 0)),
@@ -113,7 +114,7 @@ def approve_estimate(eid):
     db = g.db
     est = db.query(Estimate).filter(Estimate.id == eid).first()
     if est:
-        est.status = "Approved"; est.approved_at = datetime.utcnow()
+        est.status = "Approved"; est.approved_at = utcnow()
         db.commit()
         log_audit("approve", "estimate", eid, f"Approved estimate {est.estimate_number}")
         flash("Estimate approved", "success")
@@ -361,7 +362,7 @@ def create_tpm():
     db = g.db
     try:
         c = TPMContract(customer_id=int(request.form["customer_id"]),
-                        contract_number=request.form.get("contract_number", f"TPM-{datetime.utcnow().strftime('%Y%m')}-{datetime.utcnow().microsecond}"),
+                        contract_number=request.form.get("contract_number", f"TPM-{utcnow().strftime('%Y%m')}-{utcnow().microsecond}"),
                         title=request.form["title"],
                         start_date=date.fromisoformat(request.form["start_date"]),
                         end_date=date.fromisoformat(request.form["end_date"]) if request.form.get("end_date") else None,
