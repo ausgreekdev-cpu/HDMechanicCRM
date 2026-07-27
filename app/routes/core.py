@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, redirect, session, render_template, request, flash, jsonify, send_file, g
 from app.auth import hash_password, verify_password, login_required, admin_required
 from app.export import export_csv
+from app import limiter
 
 bp = Blueprint("core", __name__)
 
@@ -18,6 +19,7 @@ def root():
 
 
 @bp.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
 def login():
     if request.method == "POST":
         from app.models import User

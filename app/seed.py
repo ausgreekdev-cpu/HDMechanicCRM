@@ -57,13 +57,11 @@ def seed_demo_data():
             fn = random.choice(FIRST_NAMES)
             ln = random.choice(LAST_NAMES)
             c = Customer(
-                first_name=fn, last_name=ln,
+                name=f"{fn} {ln}",
                 email=f"{fn.lower()}.{ln.lower()}@email.com",
                 phone=f"({random.randint(200,999)}) {random.randint(200,999)}-{random.randint(1000,9999)}",
-                address=f"{random.randint(100,9999)} {random.choice(STREETS)}",
-                city=random.choice(CITIES), state="TX",
+                address=f"{random.randint(100,9999)} {random.choice(STREETS)}, {random.choice(CITIES)}, TX",
                 notes=f"Customer since {random.randint(2020,2025)}",
-                customer_type=random.choice(["Residential","Commercial","Fleet"]),
                 created_at=datetime.now() - timedelta(days=random.randint(30,730))
             )
             db.add(c)
@@ -79,8 +77,7 @@ def seed_demo_data():
                 year=random.randint(2010,2024),
                 vin=f"{''.join(random.choices('ABCDEFGHJKLMNPRSTUVWXYZ0123456789', k=17))}",
                 license_plate=f"{''.join(random.choices('ABCDEFGH', k=3))}-{random.randint(1000,9999)}",
-                color=random.choice(["White","Black","Silver","Red","Blue","Gray","Navy"]),
-                mileage=random.randint(5000,150000),
+                engine_type=random.choice(["Gasoline","Diesel","Hybrid","Electric"]),
                 created_at=c.created_at
             )
             db.add(v)
@@ -93,7 +90,7 @@ def seed_demo_data():
                       ("Dave Wilson","technician"),("Alex Kim","apprentice"),("Tom Brown","lead")]
         for name, role in tech_names:
             t = Technician(
-                name=name, specialty=random.choice(SPECIALTIES),
+                name=name, specialization=random.choice(SPECIALTIES),
                 hourly_rate=random.uniform(25,65), is_active=True,
                 phone=f"({random.randint(200,999)}) {random.randint(200,999)}-{random.randint(1000,9999)}"
             )
@@ -123,8 +120,8 @@ def seed_demo_data():
         for pn, cat, cost, qty in part_data:
             p = Part(
                 part_number=f"P-{random.randint(10000,99999)}", name=pn,
-                category=cat, cost=cost, price=round(cost * random.uniform(1.4,2.2),2),
-                quantity=qty, min_quantity=max(3, qty // 4),
+                category=cat, cost_price=cost, selling_price=round(cost * random.uniform(1.4,2.2),2),
+                quantity_on_hand=qty, min_quantity=max(3, qty // 4),
                 supplier=f"AutoZone" if random.random()>0.5 else "O'Reilly",
                 created_at=datetime.now() - timedelta(days=random.randint(1,180))
             )
@@ -133,7 +130,7 @@ def seed_demo_data():
         db.flush()
 
         # Work Orders
-        statuses = ["Pending","In Progress","Completed","On Hold"]
+        statuses = ["New","In Progress","Completed","Waiting Parts"]
         wo_descs = [
             "Oil change and filter replacement","Full brake job - pads, rotors, fluid",
             "Engine diagnostic - check engine light","Transmission service",
@@ -150,17 +147,16 @@ def seed_demo_data():
         for i in range(30):
             c = random.choice(customers)
             v = random.choice([v for v in vehicles if v.customer_id == c.id] or vehicles)
-            tech = random.choice(techs)
             status = random.choice(statuses)
             wo = WorkOrder(
-                customer_id=c.id, vehicle_id=v.id, technician_id=tech.id,
+                customer_id=c.id, vehicle_id=v.id,
+                title=random.choice(wo_descs),
                 description=random.choice(wo_descs),
-                status=status, priority=random.choice(URGENCY),
-                estimated_hours=round(random.uniform(0.5,8),1),
-                actual_hours=round(random.uniform(0.5,8),1) if status == "Completed" else None,
-                mileage=v.mileage + random.randint(0,5000),
+                status=status,
+                labor_hours=round(random.uniform(0.5,8),1),
+                labor_rate=85,
+                odometer=random.randint(10000,150000),
                 created_at=datetime.now() - timedelta(days=random.randint(0,90)),
-                started_at=datetime.now() - timedelta(days=random.randint(0,60)) if status != "Pending" else None,
                 completed_at=datetime.now() - timedelta(days=random.randint(0,30)) if status == "Completed" else None,
             )
             db.add(wo)
@@ -175,19 +171,19 @@ def seed_demo_data():
                 wop = WorkOrderItem(
                     work_order_id=wo.id, description=part.name,
                     part_used=part.name, quantity=qty,
-                    unit_price=part.price,
-                    total_price=round(qty * part.price, 2),
+                    unit_price=part.selling_price,
+                    total_price=round(qty * part.selling_price, 2),
                     is_labor=False,
                 )
                 db.add(wop)
-                part.quantity = max(0, part.quantity - qty)
+                part.quantity_on_hand = max(0, part.quantity_on_hand - qty)
         db.flush()
 
         # Invoices
         for wo in [w for w in work_orders if w.status == "Completed"][:20]:
             inv_items = db.query(WorkOrderItem).filter(WorkOrderItem.work_order_id == wo.id).all()
             items_total = sum(ip.quantity * ip.unit_price for ip in inv_items)
-            labor = wo.estimated_hours * 85
+            labor = wo.labor_hours * 85
             inv_subtotal = items_total + labor
             inv_subtotal = max(inv_subtotal, 50)
             inv_total = round(inv_subtotal * 1.0825, 2)

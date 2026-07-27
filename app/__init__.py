@@ -1,7 +1,11 @@
 import os
-from flask import Flask, g, session
+from flask import Flask, g, session, request
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from app.database import SessionLocal
+
+limiter = Limiter(key_func=get_remote_address)
 
 
 def create_app(config_override=None):
@@ -35,6 +39,15 @@ def create_app(config_override=None):
         app.config.update(config_override)
 
     csrf = CSRFProtect(app)
+    limiter.init_app(app)
+
+    @app.after_request
+    def set_security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
 
     @app.before_request
     def open_session():
@@ -62,7 +75,7 @@ def create_app(config_override=None):
         core, dashboard, customers, vehicles, work_orders, parts, scrap_metal,
         operations, communications, technicians, invoices, purchase_orders, dvi,
         advanced_ops, finance, inventory_advanced, crm_advanced, marketplace,
-        customer_portal, sms_integration, quote_to_wo, terms, stripe_webhooks,
+        customer_portal, sms_integration, quote_to_wo, terms, square_payments,
         analytics_api
     )
 
@@ -88,8 +101,8 @@ def create_app(config_override=None):
     app.register_blueprint(sms_integration.bp)
     app.register_blueprint(quote_to_wo.bp)
     app.register_blueprint(terms.bp)
-    app.register_blueprint(stripe_webhooks.bp)
-    csrf.exempt(stripe_webhooks.bp)
+    app.register_blueprint(square_payments.bp)
+    csrf.exempt(square_payments.bp)
     app.register_blueprint(analytics_api.bp)
     csrf.exempt(analytics_api.bp)
 
