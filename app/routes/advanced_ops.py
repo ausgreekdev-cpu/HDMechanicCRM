@@ -16,8 +16,9 @@ bp = Blueprint("advanced_ops", __name__, url_prefix="/ops")
 @login_required
 def list_companies():
     db = g.db
-    companies = db.query(Company).order_by(Company.name).all()
-    return render_template("advanced_ops/companies.html", companies=companies, active_page="companies")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(Company).order_by(Company.name), page)
+    return render_template("advanced_ops/companies.html", companies=p["rows"], p=p, active_page="companies")
 
 
 @bp.route("/companies/new", methods=["POST"])
@@ -170,8 +171,9 @@ def send_estimate(eid):
 @login_required
 def list_core_charges():
     db = g.db
-    charges = db.query(CoreCharge).order_by(CoreCharge.created_at.desc()).all()
-    return render_template("advanced_ops/core_charges.html", charges=charges, active_page="core_charges")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(CoreCharge).order_by(CoreCharge.created_at.desc()), page)
+    return render_template("advanced_ops/core_charges.html", charges=p["rows"], p=p, active_page="core_charges")
 
 
 @bp.route("/core-charges/new", methods=["POST"])
@@ -210,8 +212,9 @@ def return_core(ccid):
 @login_required
 def list_warranties():
     db = g.db
-    warranties = db.query(Warranty).order_by(Warranty.created_at.desc()).all()
-    return render_template("advanced_ops/warranties.html", warranties=warranties, active_page="warranties")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(Warranty).order_by(Warranty.created_at.desc()), page)
+    return render_template("advanced_ops/warranties.html", warranties=p["rows"], p=p, active_page="warranties")
 
 
 @bp.route("/warranties/new", methods=["POST"])
@@ -238,8 +241,9 @@ def create_warranty():
 @login_required
 def list_warranty_claims():
     db = g.db
-    claims = db.query(WarrantyClaim).order_by(WarrantyClaim.created_at.desc()).all()
-    return render_template("advanced_ops/warranty_claims.html", claims=claims, active_page="warranty_claims")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(WarrantyClaim).order_by(WarrantyClaim.created_at.desc()), page)
+    return render_template("advanced_ops/warranty_claims.html", claims=p["rows"], p=p, active_page="warranty_claims")
 
 
 @bp.route("/warranty-claims/new", methods=["POST"])
@@ -267,8 +271,9 @@ def create_warranty_claim():
 @login_required
 def list_vendors():
     db = g.db
-    vendors = db.query(Vendor).order_by(Vendor.name).all()
-    return render_template("advanced_ops/vendors.html", vendors=vendors, active_page="vendors")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(Vendor).order_by(Vendor.name), page)
+    return render_template("advanced_ops/vendors.html", vendors=p["rows"], p=p, active_page="vendors")
 
 
 @bp.route("/vendors/new", methods=["POST"])
@@ -291,8 +296,9 @@ def create_vendor():
 @login_required
 def list_vendor_quotes():
     db = g.db
-    quotes = db.query(VendorQuote).order_by(VendorQuote.created_at.desc()).all()
-    return render_template("advanced_ops/vendor_quotes.html", quotes=quotes, active_page="vendor_quotes")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(VendorQuote).order_by(VendorQuote.created_at.desc()), page)
+    return render_template("advanced_ops/vendor_quotes.html", quotes=p["rows"], p=p, active_page="vendor_quotes")
 
 
 @bp.route("/vendor-quotes/new", methods=["POST"])
@@ -321,8 +327,9 @@ def create_vendor_quote():
 @login_required
 def list_emissions():
     db = g.db
-    records = db.query(DieselEmissionRecord).order_by(DieselEmissionRecord.service_date.desc()).all()
-    return render_template("advanced_ops/emissions.html", records=records, active_page="emissions")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(DieselEmissionRecord).order_by(DieselEmissionRecord.service_date.desc()), page)
+    return render_template("advanced_ops/emissions.html", records=p["rows"], p=p, active_page="emissions")
 
 
 @bp.route("/emissions/new", methods=["POST"])
@@ -353,8 +360,9 @@ def create_emission_record():
 @login_required
 def list_tpm():
     db = g.db
-    contracts = db.query(TPMContract).order_by(TPMContract.start_date.desc()).all()
-    return render_template("advanced_ops/tpm_contracts.html", contracts=contracts, active_page="tpm_contracts")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(TPMContract).order_by(TPMContract.start_date.desc()), page)
+    return render_template("advanced_ops/tpm_contracts.html", contracts=p["rows"], p=p, active_page="tpm_contracts")
 
 @bp.route("/tpm-contracts/new", methods=["POST"])
 @login_required
@@ -383,8 +391,9 @@ def create_tpm():
 @login_required
 def list_fleet():
     db = g.db
-    groups = db.query(FleetGroup).order_by(FleetGroup.name).all()
-    return render_template("advanced_ops/fleet.html", groups=groups, active_page="fleet")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(FleetGroup).order_by(FleetGroup.name), page)
+    return render_template("advanced_ops/fleet.html", groups=p["rows"], p=p, active_page="fleet")
 
 
 @bp.route("/fleet/new", methods=["POST"])
@@ -453,8 +462,9 @@ def create_fuel_record():
 @login_required
 def list_hour_meters():
     db = g.db
-    records = db.query(EquipmentHourMeter).order_by(EquipmentHourMeter.reading_date.desc()).all()
-    return render_template("advanced_ops/hour_meters.html", records=records, active_page="hour_meters")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(EquipmentHourMeter).order_by(EquipmentHourMeter.reading_date.desc()), page)
+    return render_template("advanced_ops/hour_meters.html", records=p["rows"], p=p, active_page="hour_meters")
 
 
 @bp.route("/hour-meters/new", methods=["POST"])
@@ -478,8 +488,9 @@ def create_hour_meter():
 @login_required
 def list_dot():
     db = g.db
-    inspections = db.query(DOTInspection).order_by(DOTInspection.inspection_date.desc()).all()
-    return render_template("advanced_ops/dot_inspections.html", inspections=inspections, active_page="dot_inspections")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(DOTInspection).order_by(DOTInspection.inspection_date.desc()), page)
+    return render_template("advanced_ops/dot_inspections.html", inspections=p["rows"], p=p, active_page="dot_inspections")
 
 
 @bp.route("/dot-inspections/new", methods=["POST"])
@@ -509,8 +520,9 @@ def create_dot():
 @login_required
 def list_eld():
     db = g.db
-    logs = db.query(ELDLog).order_by(ELDLog.log_date.desc()).all()
-    return render_template("advanced_ops/eld_logs.html", logs=logs, active_page="eld_logs")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(ELDLog).order_by(ELDLog.log_date.desc()), page)
+    return render_template("advanced_ops/eld_logs.html", logs=p["rows"], p=p, active_page="eld_logs")
 
 
 @bp.route("/eld-logs/new", methods=["POST"])
@@ -540,8 +552,9 @@ def create_eld():
 @login_required
 def list_tires():
     db = g.db
-    tires = db.query(TireRecord).order_by(TireRecord.install_date.desc().nullslast()).all()
-    return render_template("advanced_ops/tires.html", tires=tires, active_page="tires")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(TireRecord).order_by(TireRecord.install_date.desc().nullslast()), page)
+    return render_template("advanced_ops/tires.html", tires=p["rows"], p=p, active_page="tires")
 
 
 @bp.route("/tires/new", methods=["POST"])
@@ -567,8 +580,9 @@ def create_tire():
 @login_required
 def list_cross_refs():
     db = g.db
-    refs = db.query(PartCrossReference).order_by(PartCrossReference.cross_brand).all()
-    return render_template("advanced_ops/cross_refs.html", refs=refs, active_page="cross_refs")
+    page = int(request.args.get("page", 1))
+    p = paginate(db.query(PartCrossReference).order_by(PartCrossReference.cross_brand), page)
+    return render_template("advanced_ops/cross_refs.html", refs=p["rows"], p=p, active_page="cross_refs")
 
 
 @bp.route("/cross-references/new", methods=["POST"])

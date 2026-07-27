@@ -14,8 +14,9 @@ bp = Blueprint("inventory_advanced", __name__, url_prefix="/inv")
 @login_required
 def list_warehouses():
     db = g.db
-    warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
-    return render_template("inventory_advanced/warehouses.html", warehouses=warehouses, active_page="warehouses")
+    query = db.query(Warehouse).order_by(Warehouse.name)
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/warehouses.html", warehouses=pagination["rows"], pagination=pagination, active_page="warehouses")
 
 
 @bp.route("/warehouses/new", methods=["POST"])
@@ -36,9 +37,10 @@ def create_warehouse():
 @login_required
 def list_bins():
     db = g.db
-    bins = db.query(BinLocation).order_by(BinLocation.bin_code).all()
+    query = db.query(BinLocation).order_by(BinLocation.bin_code)
+    pagination = paginate(query, request.args.get("page", 1, type=int))
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
-    return render_template("inventory_advanced/bins.html", bins=bins, warehouses=warehouses, active_page="bins")
+    return render_template("inventory_advanced/bins.html", bins=pagination["rows"], pagination=pagination, warehouses=warehouses, active_page="bins")
 
 
 @bp.route("/bins/new", methods=["POST"])
@@ -63,8 +65,9 @@ def create_bin():
 @login_required
 def list_serial_numbers():
     db = g.db
-    serials = db.query(SerialNumber).order_by(SerialNumber.created_at.desc()).all()
-    return render_template("inventory_advanced/serials.html", serials=serials, active_page="serials")
+    query = db.query(SerialNumber).order_by(SerialNumber.created_at.desc())
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/serials.html", serials=pagination["rows"], pagination=pagination, active_page="serials")
 
 
 @bp.route("/serial-numbers/new", methods=["POST"])
@@ -88,8 +91,9 @@ def create_serial_number():
 @login_required
 def list_kits():
     db = g.db
-    kits = db.query(KitAssembly).order_by(KitAssembly.name).all()
-    return render_template("inventory_advanced/kits.html", kits=kits, active_page="kits")
+    query = db.query(KitAssembly).order_by(KitAssembly.name)
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/kits.html", kits=pagination["rows"], pagination=pagination, active_page="kits")
 
 
 @bp.route("/kits/new", methods=["POST"])
@@ -116,8 +120,9 @@ def create_kit():
 @login_required
 def list_supersessions():
     db = g.db
-    items = db.query(PartSupersession).order_by(PartSupersession.superseded_at.desc()).all()
-    return render_template("inventory_advanced/supersessions.html", items=items, active_page="supersessions")
+    query = db.query(PartSupersession).order_by(PartSupersession.superseded_at.desc())
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/supersessions.html", items=pagination["rows"], pagination=pagination, active_page="supersessions")
 
 
 @bp.route("/supersessions/new", methods=["POST"])
@@ -142,8 +147,9 @@ def create_supersession():
 @login_required
 def list_non_stock():
     db = g.db
-    items = db.query(NonStockItem).order_by(NonStockItem.name).all()
-    return render_template("inventory_advanced/non_stock.html", items=items, active_page="non_stock")
+    query = db.query(NonStockItem).order_by(NonStockItem.name)
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/non_stock.html", items=pagination["rows"], pagination=pagination, active_page="non_stock")
 
 
 @bp.route("/non-stock/new", methods=["POST"])
@@ -169,8 +175,9 @@ def create_non_stock():
 @login_required
 def list_consignment():
     db = g.db
-    items = db.query(ConsignmentItem).order_by(ConsignmentItem.supplier).all()
-    return render_template("inventory_advanced/consignment.html", items=items, active_page="consignment")
+    query = db.query(ConsignmentItem).order_by(ConsignmentItem.supplier)
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/consignment.html", items=pagination["rows"], pagination=pagination, active_page="consignment")
 
 
 @bp.route("/consignment/new", methods=["POST"])
@@ -193,8 +200,9 @@ def create_consignment():
 @login_required
 def list_cycle_counts():
     db = g.db
-    counts = db.query(CycleCount).order_by(CycleCount.count_date.desc()).all()
-    return render_template("inventory_advanced/cycle_counts.html", counts=counts, active_page="cycle_counts")
+    query = db.query(CycleCount).order_by(CycleCount.count_date.desc())
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/cycle_counts.html", counts=pagination["rows"], pagination=pagination, active_page="cycle_counts")
 
 
 @bp.route("/cycle-counts/new", methods=["POST"])
@@ -226,8 +234,9 @@ def create_cycle_count():
 @login_required
 def list_transfers():
     db = g.db
-    transfers = db.query(InventoryTransfer).order_by(InventoryTransfer.created_at.desc()).all()
-    return render_template("inventory_advanced/transfers.html", transfers=transfers, active_page="transfers")
+    query = db.query(InventoryTransfer).order_by(InventoryTransfer.created_at.desc())
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/transfers.html", transfers=pagination["rows"], pagination=pagination, active_page="transfers")
 
 
 @bp.route("/transfers/new", methods=["POST"])
@@ -253,8 +262,9 @@ def create_transfer():
 @login_required
 def list_scorecards():
     db = g.db
-    cards = db.query(SupplierScorecard).order_by(SupplierScorecard.rating_date.desc()).all()
-    return render_template("inventory_advanced/scorecards.html", cards=cards, active_page="scorecards")
+    query = db.query(SupplierScorecard).order_by(SupplierScorecard.rating_date.desc())
+    pagination = paginate(query, request.args.get("page", 1, type=int))
+    return render_template("inventory_advanced/scorecards.html", cards=pagination["rows"], pagination=pagination, active_page="scorecards")
 
 
 @bp.route("/scorecards/new", methods=["POST"])

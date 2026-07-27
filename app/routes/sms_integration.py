@@ -110,8 +110,10 @@ def templates_list():
             log_audit("create", "sms_template", tmpl.id, f"Created SMS template {name}")
             flash("Template created", "success")
         return redirect("/sms/templates")
-    tmpl_list = db.query(SMSTemplate).order_by(SMSTemplate.name).all()
-    return render_template("sms/templates.html", templates=tmpl_list, active_page="sms")
+    page = int(request.args.get("page", 1))
+    query = db.query(SMSTemplate).order_by(SMSTemplate.name)
+    pagination = paginate(query, page)
+    return render_template("sms/templates.html", templates=pagination["rows"], pagination=pagination, active_page="sms")
 
 
 @bp.route("/templates/<int:tid>/delete", methods=["POST"])

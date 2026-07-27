@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import Customer, Vehicle, WorkOrder, Invoice, CustomerPortalUser, CustomerPortalToken, CustomerPortalMessage
 from app.auth import login_required, admin_required
 from app.audit import log_audit
+from app.helpers import paginate
 
 bp = Blueprint("customer_portal", __name__, url_prefix="/portal")
 
@@ -116,9 +117,13 @@ def work_orders():
     user = _get_portal_user()
     customer = db.query(Customer).filter(Customer.id == user.customer_id).first()
     wos = []
+    pagination = None
     if customer:
-        wos = db.query(WorkOrder).filter(WorkOrder.customer_id == customer.id).order_by(WorkOrder.created_at.desc()).all()
-    return render_template("portal/work_orders.html", work_orders=wos, customer=customer)
+        page = int(request.args.get("page", 1))
+        query = db.query(WorkOrder).filter(WorkOrder.customer_id == customer.id).order_by(WorkOrder.created_at.desc())
+        pagination = paginate(query, page)
+        wos = pagination["rows"]
+    return render_template("portal/work_orders.html", work_orders=wos, customer=customer, pagination=pagination)
 
 
 @bp.route("/invoices")
@@ -128,10 +133,15 @@ def invoices():
     user = _get_portal_user()
     customer = db.query(Customer).filter(Customer.id == user.customer_id).first()
     invoice_list = []
+    pagination = None
     if customer:
         wo_ids = [wo.id for wo in db.query(WorkOrder).filter(WorkOrder.customer_id == customer.id).all()]
-        invoice_list = db.query(Invoice).filter(Invoice.work_order_id.in_(wo_ids)).order_by(Invoice.created_at.desc()).all() if wo_ids else []
-    return render_template("portal/invoices.html", invoices=invoice_list, customer=customer)
+        if wo_ids:
+            page = int(request.args.get("page", 1))
+            query = db.query(Invoice).filter(Invoice.work_order_id.in_(wo_ids)).order_by(Invoice.created_at.desc())
+            pagination = paginate(query, page)
+            invoice_list = pagination["rows"]
+    return render_template("portal/invoices.html", invoices=invoice_list, customer=customer, pagination=pagination)
 
 
 @bp.route("/messages", methods=["GET", "POST"])
@@ -154,10 +164,12 @@ def messages():
         CustomerPortalMessage.is_read == False
     ).update({"is_read": True})
     db.commit()
-    all_msgs = db.query(CustomerPortalMessage).filter(
+    page = int(request.args.get("page", 1))
+    query = db.query(CustomerPortalMessage).filter(
         CustomerPortalMessage.portal_user_id == user.id
-    ).order_by(CustomerPortalMessage.created_at.desc()).all()
-    return render_template("portal/messages.html", messages=all_msgs)
+    ).order_by(CustomerPortalMessage.created_at.desc())
+    pagination = paginate(query, page)
+    return render_template("portal/messages.html", messages=pagination["rows"], pagination=pagination)
 
 
 @bp.route("/request-service", methods=["GET", "POST"])
@@ -233,8 +245,10 @@ def admin_invite():
 @admin_required
 def admin_customers():
     db = g.db
-    users = db.query(CustomerPortalUser).order_by(CustomerPortalUser.created_at.desc()).all()
-    return render_template("portal/admin_customers.html", portal_users=users)
+    page = int(request.args.get("page", 1))
+    query = db.query(CustomerPortalUser).order_by(CustomerPortalUser.created_at.desc())
+    pagination = paginate(query, page)
+    return render_template("portal/admin_customers.html", portal_users=pagination["rows"], pagination=pagination)
 
 
 @bp.route("/admin/message/<int:msg_id>/reply", methods=["POST"])

@@ -4,6 +4,7 @@ from app.timeutils import utcnow
 from flask import Blueprint, redirect, session, render_template, request, flash, jsonify, send_file, g
 from app.auth import hash_password, verify_password, login_required, admin_required
 from app.export import export_csv
+from app.helpers import paginate
 from app import limiter
 
 bp = Blueprint("core", __name__)
@@ -75,8 +76,10 @@ def settings():
 def admin_users():
     from app.models import User
     db = g.db
-    users = db.query(User).order_by(User.username).all()
-    return render_template("admin/users.html", users=users, active_page="admin_users")
+    page = int(request.args.get("page", 1))
+    query = db.query(User).order_by(User.username)
+    pagination = paginate(query, page)
+    return render_template("admin/users.html", users=pagination["rows"], pagination=pagination, active_page="admin_users")
 
 
 @bp.route("/admin/users/new", methods=["POST"])
@@ -257,9 +260,11 @@ def technician_efficiency():
     from app.models import Technician, WorkOrder, Schedule
     from sqlalchemy import func
     db = g.db
-    techs = db.query(Technician).filter(Technician.is_active == True).order_by(Technician.name).all()
+    page = int(request.args.get("page", 1))
+    query = db.query(Technician).filter(Technician.is_active == True).order_by(Technician.name)
+    pagination = paginate(query, page)
     results = []
-    for t in techs:
+    for t in pagination["rows"]:
         total_hours = db.query(func.sum(WorkOrder.labor_hours)).join(
             Schedule, Schedule.work_order_id == WorkOrder.id
         ).filter(Schedule.technician_id == t.id, WorkOrder.status == "Completed").scalar() or 0
@@ -269,7 +274,7 @@ def technician_efficiency():
         results.append({"name": t.name, "specialization": t.specialization or "",
                         "hourly_rate": t.hourly_rate, "total_hours": total_hours,
                         "wo_count": wo_count, "earned": total_hours * t.hourly_rate})
-    return render_template("reports/tech_efficiency.html", techs=results, active_page="reports")
+    return render_template("reports/tech_efficiency.html", techs=results, pagination=pagination, active_page="reports")
 
 
 # ---- Alerts ----
@@ -278,9 +283,11 @@ def technician_efficiency():
 def list_alerts():
     from app.models import Alert
     db = g.db
-    alerts = db.query(Alert).order_by(Alert.created_at.desc()).limit(50).all()
+    page = int(request.args.get("page", 1))
+    query = db.query(Alert).order_by(Alert.created_at.desc())
+    pagination = paginate(query, page)
     unread = db.query(Alert).filter(Alert.is_read == False).count()
-    return render_template("alerts.html", alerts=alerts, unread=unread, active_page="alerts")
+    return render_template("alerts.html", alerts=pagination["rows"], pagination=pagination, unread=unread, active_page="alerts")
 
 
 @bp.route("/alerts/<int:alert_id>/read", methods=["POST"])
@@ -301,9 +308,11 @@ def mark_alert_read(alert_id):
 def list_service_reminders():
     from app.models import ServiceReminder, Vehicle
     db = g.db
-    reminders = db.query(ServiceReminder).order_by(ServiceReminder.vehicle_id).all()
+    page = int(request.args.get("page", 1))
+    query = db.query(ServiceReminder).order_by(ServiceReminder.vehicle_id)
+    pagination = paginate(query, page)
     vehicles = db.query(Vehicle).order_by(Vehicle.make).all()
-    return render_template("service_reminders.html", reminders=reminders,
+    return render_template("service_reminders.html", reminders=pagination["rows"], pagination=pagination,
                            vehicles=vehicles, active_page="service_reminders")
 
 
@@ -508,10 +517,12 @@ def delete_attachment(att_id):
 def list_recurring_work_orders():
     from app.models import RecurringWorkOrder, Customer, Vehicle
     db = g.db
-    items = db.query(RecurringWorkOrder).order_by(RecurringWorkOrder.next_due_date).all()
+    page = int(request.args.get("page", 1))
+    query = db.query(RecurringWorkOrder).order_by(RecurringWorkOrder.next_due_date)
+    pagination = paginate(query, page)
     customers = db.query(Customer).order_by(Customer.name).all()
     vehicles = db.query(Vehicle).order_by(Vehicle.make).all()
-    return render_template("recurring_wo/list.html", items=items, customers=customers,
+    return render_template("recurring_wo/list.html", items=pagination["rows"], pagination=pagination, customers=customers,
                            vehicles=vehicles, active_page="recurring_wo")
 
 

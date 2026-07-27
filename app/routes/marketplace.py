@@ -8,6 +8,7 @@ from app.models.templates import (
 )
 from app.models.core import User
 from app.payments_square import square_enabled
+from app.helpers import paginate
 from app import limiter
 
 bp = Blueprint("marketplace", __name__, url_prefix="/marketplace")
@@ -61,12 +62,14 @@ def index():
 def category(slug):
     cat = g.db.query(TemplateCategory).filter_by(slug=slug, is_active=True).first()
     if not cat: abort(404)
-    templates = g.db.query(WorkflowTemplate).filter_by(
+    page = int(request.args.get("page", 1))
+    query = g.db.query(WorkflowTemplate).filter_by(
         category_id=cat.id, is_active=True
-    ).order_by(WorkflowTemplate.is_featured.desc(), WorkflowTemplate.purchase_count.desc()).all()
+    ).order_by(WorkflowTemplate.is_featured.desc(), WorkflowTemplate.purchase_count.desc())
+    pagination = paginate(query, page)
     user_plan = _get_user_plan()
     return render_template("marketplace/category.html",
-        category=cat, templates=templates,
+        category=cat, templates=pagination["rows"], pagination=pagination,
         user_plan=user_plan, has_access=_user_has_template_access)
 
 
@@ -164,15 +167,17 @@ def subscribe(plan_id):
 def my_templates():
     if "user_id" not in session:
         return redirect(url_for("core.login"))
-    purchases = g.db.query(TemplatePurchase).filter_by(
+    page = int(request.args.get("page", 1))
+    query = g.db.query(TemplatePurchase).filter_by(
         user_id=session["user_id"], status="completed"
-    ).all()
+    )
+    pagination = paginate(query, page)
     sub = g.db.query(UserSubscription).filter(
         UserSubscription.user_id == session["user_id"],
         UserSubscription.status == "active"
     ).first()
     return render_template("marketplace/my_templates.html",
-        purchases=purchases, subscription=sub)
+        purchases=pagination["rows"], pagination=pagination, subscription=sub)
 
 
 @bp.route("/api/check-access/<int:tid>")
