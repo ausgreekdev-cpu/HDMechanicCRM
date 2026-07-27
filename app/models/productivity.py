@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey, Date, Boolean, BigInteger, func
+from sqlalchemy import Column, Integer, String, Float, Numeric, Text, DateTime, ForeignKey, Date, Boolean, BigInteger, func
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -99,7 +99,7 @@ class ShopSupply(Base):
     quantity_on_hand = Column(Integer, default=0)
     unit = Column(String(50), default="Each")
     min_quantity = Column(Integer, default=5)
-    cost_per_unit = Column(Float, default=0)
+    cost_per_unit = Column(Numeric(10,2), default=0)
     notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
 
@@ -155,6 +155,6 @@ class EnvironmentalRecord(Base):
     unit = Column(String(50))
     vendor = Column(String(200))
     disposal_method = Column(String(200))
-    cost = Column(Float, default=0)
+    cost = Column(Numeric(10,2), default=0)
     notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())

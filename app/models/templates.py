@@ -2,7 +2,7 @@ import enum
 from datetime import datetime, timedelta
 from app.timeutils import utcnow
 from sqlalchemy import (
-    Column, Integer, String, Text, Float, Boolean, DateTime, Date,
+    Column, Integer, String, Text, Float, Numeric, Boolean, DateTime, Date,
     ForeignKey, Enum as SAEnum, JSON
 )
 from sqlalchemy.orm import relationship
@@ -36,7 +36,7 @@ class WorkflowTemplate(Base):
     icon = Column(String(50), default="bi-gear")
 
     tier = Column(String(20), default="free")  # free, pro, enterprise, premium
-    price = Column(Float, default=0.0)  # 0 = free, >0 = micro-transaction price
+    price = Column(Numeric(10,2), default=0.0)  # 0 = free, >0 = micro-transaction price
 
     steps = Column(JSON, default=list)
     checklist = Column(JSON, default=list)
@@ -63,7 +63,7 @@ class TemplatePurchase(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     template_id = Column(Integer, ForeignKey("workflow_templates.id"), nullable=False)
-    amount_paid = Column(Float, nullable=False)
+    amount_paid = Column(Numeric(10,2), nullable=False)
     payment_method = Column(String(50), default="square")
     stripe_payment_id = Column(String(200), default="")
     status = Column(String(20), default="completed")  # completed, refunded, pending
@@ -80,8 +80,8 @@ class SubscriptionPlan(Base):
     name = Column(String(100), nullable=False)
     slug = Column(String(100), nullable=False, unique=True)
     description = Column(Text, default="")
-    price_monthly = Column(Float, nullable=False)
-    price_yearly = Column(Float, nullable=False)
+    price_monthly = Column(Numeric(10,2), nullable=False)
+    price_yearly = Column(Numeric(10,2), nullable=False)
     stripe_price_monthly = Column(String(100), default="")
     stripe_price_yearly = Column(String(100), default="")
 

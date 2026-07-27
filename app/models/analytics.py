@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, Boolean, JSON
+from sqlalchemy import Column, Integer, String, Float, Numeric, Text, DateTime, Boolean, JSON
 from app.database import Base
 
 
@@ -64,6 +64,6 @@ class DailyMetrics(Base):
     total_page_views = Column(Integer, default=0)
     new_work_orders = Column(Integer, default=0)
     new_customers = Column(Integer, default=0)
-    revenue = Column(Float, default=0)
+    revenue = Column(Numeric(10,2), default=0)
     scrap_weight_kg = Column(Float, default=0)
     avg_session_minutes = Column(Float, default=0)

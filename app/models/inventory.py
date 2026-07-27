@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey, Date, Boolean, func
+from sqlalchemy import Column, Integer, String, Float, Numeric, Text, DateTime, ForeignKey, Date, Boolean, func
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -46,7 +46,7 @@ class KitAssembly(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(300), nullable=False)
     description = Column(Text)
-    selling_price = Column(Float, default=0)
+    selling_price = Column(Numeric(10,2), default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
     items = relationship("KitItem", back_populates="kit", cascade="all, delete-orphan")
@@ -106,8 +106,8 @@ class NonStockItem(Base):
     name = Column(String(300), nullable=False)
     description = Column(Text)
     supplier = Column(String(200))
-    estimated_cost = Column(Float, default=0)
-    selling_price = Column(Float, default=0)
+    estimated_cost = Column(Numeric(10,2), default=0)
+    selling_price = Column(Numeric(10,2), default=0)
     lead_days = Column(Integer, default=7)
     notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
@@ -119,7 +119,7 @@ class ConsignmentItem(Base):
     part_id = Column(Integer, ForeignKey("parts.id"), nullable=False)
     supplier = Column(String(200), nullable=False)
     quantity = Column(Integer, default=0)
-    unit_cost = Column(Float, default=0)
+    unit_cost = Column(Numeric(10,2), default=0)
     sold_quantity = Column(Integer, default=0)
     paid_quantity = Column(Integer, default=0)
     notes = Column(Text)

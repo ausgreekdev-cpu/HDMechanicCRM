@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, ForeignKey, Date, Boolean, func
+from sqlalchemy import Column, Integer, String, Float, Numeric, Text, DateTime, ForeignKey, Date, Boolean, func
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -10,7 +10,7 @@ class CreditMemo(Base):
     memo_number = Column(String(50), unique=True)
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
-    amount = Column(Float, nullable=False)
+    amount = Column(Numeric(10,2), nullable=False)
     reason = Column(Text)
     status = Column(String(50), default="Issued")
     created_at = Column(DateTime, server_default=func.now())
@@ -22,8 +22,8 @@ class CustomerDeposit(Base):
     __tablename__ = "customer_deposits"
     id = Column(Integer, primary_key=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
-    amount = Column(Float, nullable=False)
-    balance = Column(Float, nullable=False)
+    amount = Column(Numeric(10,2), nullable=False)
+    balance = Column(Numeric(10,2), nullable=False)
     payment_method = Column(String(50))
     reference = Column(String(200))
     notes = Column(Text)
@@ -52,7 +52,7 @@ class Contractor1099(Base):
     address = Column(Text)
     phone = Column(String(50))
     email = Column(String(200))
-    total_paid_ytd = Column(Float, default=0)
+    total_paid_ytd = Column(Numeric(10,2), default=0)
     is_active = Column(Boolean, default=True)
     notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
@@ -65,7 +65,7 @@ class BankAccount(Base):
     account_number = Column(String(100))
     routing_number = Column(String(50))
     account_type = Column(String(50), default="Checking")
-    balance = Column(Float, default=0)
+    balance = Column(Numeric(10,2), default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
     transactions = relationship("BankTransaction", back_populates="account")
@@ -77,7 +77,7 @@ class BankTransaction(Base):
     account_id = Column(Integer, ForeignKey("bank_accounts.id"), nullable=False)
     transaction_date = Column(Date, nullable=False)
     description = Column(String(300))
-    amount = Column(Float, nullable=False)
+    amount = Column(Numeric(10,2), nullable=False)
     transaction_type = Column(String(50))
     reference = Column(String(200))
     reconciled = Column(Boolean, default=False)
@@ -91,7 +91,7 @@ class Expense(Base):
     id = Column(Integer, primary_key=True)
     work_order_id = Column(Integer, ForeignKey("work_orders.id", ondelete="SET NULL"), nullable=True)
     category = Column(String(100), nullable=False)
-    amount = Column(Float, nullable=False)
+    amount = Column(Numeric(10,2), nullable=False)
     expense_date = Column(Date, nullable=False)
     vendor = Column(String(200))
     description = Column(Text)
@@ -109,8 +109,8 @@ class LateFeeRule(Base):
     name = Column(String(200), nullable=False)
     days_overdue = Column(Integer, default=30)
     fee_type = Column(String(50), default="Percentage")
-    fee_value = Column(Float, default=5.0)
-    max_fee = Column(Float, default=0)
+    fee_value = Column(Numeric(10,2), default=5.0)
+    max_fee = Column(Numeric(10,2), default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
 
@@ -137,6 +137,6 @@ class Budget(Base):
     year = Column(Integer, nullable=False)
     month = Column(Integer, nullable=True)
     category = Column(String(100))
-    budgeted_amount = Column(Float, default=0)
+    budgeted_amount = Column(Numeric(10,2), default=0)
     notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
