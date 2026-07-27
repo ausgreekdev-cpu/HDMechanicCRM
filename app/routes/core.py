@@ -28,9 +28,13 @@ def login():
         db = g.db
         user = db.query(User).filter(User.username == username).first()
         if user and verify_password(password, user.password_hash) and user.is_active:
-            session["user_id"] = user.id
-            session["username"] = user.username
-            session["role"] = user.role
+            user_data = {
+                "user_id": user.id,
+                "username": user.username,
+                "role": user.role,
+            }
+            session.clear()
+            session.update(user_data)
             flash(f"Welcome back, {user.display_name or user.username}!", "success")
             return redirect("/dashboard")
         flash("Invalid username or password", "danger")

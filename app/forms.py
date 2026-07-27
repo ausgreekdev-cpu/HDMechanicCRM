@@ -3,7 +3,27 @@ from wtforms import (
     StringField, PasswordField, TextAreaField, IntegerField, FloatField,
     SelectField, DateField, BooleanField, SubmitField,
 )
-from wtforms.validators import DataRequired, Email, Optional, NumberRange, Length
+from wtforms.validators import DataRequired, Email, Optional, NumberRange, Length, ValidationError
+import re
+
+
+class StrongPassword:
+    def __init__(self, min_length=8, message=None):
+        self.min_length = min_length
+        self.message = message or f"Password must be at least {min_length} characters with uppercase, lowercase, and a digit"
+
+    def __call__(self, form, field):
+        if not field.data:
+            return
+        pwd = field.data
+        if len(pwd) < self.min_length:
+            raise ValidationError(self.message)
+        if not re.search(r"[A-Z]", pwd):
+            raise ValidationError(self.message)
+        if not re.search(r"[a-z]", pwd):
+            raise ValidationError(self.message)
+        if not re.search(r"\d", pwd):
+            raise ValidationError(self.message)
 
 
 class LoginForm(FlaskForm):
@@ -14,12 +34,12 @@ class LoginForm(FlaskForm):
 class SettingsForm(FlaskForm):
     display_name = StringField("Display Name", validators=[Optional(), Length(max=200)])
     current_password = PasswordField("Current Password", validators=[Optional()])
-    new_password = PasswordField("New Password", validators=[Optional(), Length(min=6, message="Password must be at least 6 characters")])
+    new_password = PasswordField("New Password", validators=[Optional(), StrongPassword(min_length=8)])
 
 
 class AdminCreateUserForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired("Username is required"), Length(max=80)])
-    password = PasswordField("Password", validators=[DataRequired("Password is required")])
+    password = PasswordField("Password", validators=[DataRequired("Password is required"), StrongPassword(min_length=8)])
     display_name = StringField("Display Name", validators=[Optional(), Length(max=200)])
     role = SelectField("Role", choices=[("user", "User"), ("admin", "Admin")], default="user")
 

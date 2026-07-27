@@ -193,7 +193,7 @@ def admin_invite():
     if request.method == "POST":
         customer_id = int(request.form["customer_id"])
         email = request.form.get("email", "").strip()
-        password = request.form.get("temp_password", "portal123")
+        password = request.form.get("temp_password") or secrets.token_urlsafe(12)
         customer = db.query(Customer).filter(Customer.id == customer_id).first()
         if not customer:
             flash("Customer not found", "danger")
