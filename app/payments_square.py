@@ -17,71 +17,68 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
-SQUARE_LOCATION_ID = os.environ.get("CRM_SQUARE_LOCATION_ID", "")
-SQUARE_ACCESS_TOKEN = os.environ.get("CRM_SQUARE_ACCESS_TOKEN", "")
-SQUARE_ENVIRONMENT = os.environ.get("CRM_SQUARE_ENVIRONMENT", "sandbox")  # sandbox or production
-SQUARE_WEBHOOK_SIGNATURE_KEY = os.environ.get("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY", "")
+
+def _cfg(key, default=""):
+    return os.environ.get(key, default)
+
+
+def _client():
+    from square.client import Client
+    return Client(
+        access_token=_cfg("CRM_SQUARE_ACCESS_TOKEN"),
+        environment=_cfg("CRM_SQUARE_ENVIRONMENT", "sandbox"),
+    )
+
 
 def square_enabled():
-    return bool(SQUARE_ACCESS_TOKEN and SQUARE_ACCESS_TOKEN != "")
+    return bool(_cfg("CRM_SQUARE_ACCESS_TOKEN"))
+
 
 def get_square_config():
-    """Return Square config for frontend JS."""
     return {
         "enabled": square_enabled(),
-        "location_id": SQUARE_LOCATION_ID,
-        "environment": SQUARE_ENVIRONMENT,
+        "application_id": _cfg("CRM_SQUARE_APPLICATION_ID"),
+        "location_id": _cfg("CRM_SQUARE_LOCATION_ID"),
+        "environment": _cfg("CRM_SQUARE_ENVIRONMENT", "sandbox"),
     }
 
+
 def create_payment_link(amount_cents, currency, title, description, redirect_url, metadata=None):
-    """Create a Square payment link for one-time purchase."""
     if not square_enabled():
         return {"url": redirect_url, "demo": True, "payment_id": f"sq_demo_{int(datetime.utcnow().timestamp())}"}
-    
-    from square.client import Client
-    client = Client(
-        access_token=SQUARE_ACCESS_TOKEN,
-        environment=SQUARE_ENVIRONMENT,
-    )
-    
+
+    client = _client()
     result = client.checkout.create_payment_link(
         body={
             "idempotency_key": f"tmpl_{int(datetime.utcnow().timestamp() * 1000)}",
             "quick_pay": {
                 "name": title,
                 "price_money": {"amount": int(amount_cents), "currency": currency},
-                "location_id": SQUARE_LOCATION_ID,
+                "location_id": _cfg("CRM_SQUARE_LOCATION_ID"),
             },
             "redirect_url": redirect_url,
         }
     )
-    
     if result.is_success():
         return {"url": result.body["payment_link"]["url"], "payment_link_id": result.body["payment_link"]["id"]}
     else:
         logger.error(f"Square create_payment_link failed: {result.errors}")
         return {"error": str(result.errors)}
 
+
 def create_invoice(customer_name, customer_email, amount_cents, currency, title, description, due_date_days=30):
-    """Create and send a Square invoice."""
     if not square_enabled():
         return {"demo": True, "invoice_id": f"sq_inv_demo_{int(datetime.utcnow().timestamp())}"}
-    
-    from square.client import Client
-    client = Client(
-        access_token=SQUARE_ACCESS_TOKEN,
-        environment=SQUARE_ENVIRONMENT,
-    )
-    
+
+    client = _client()
     customer_id = _find_or_create_customer(client, customer_name, customer_email)
-    
     due_date = (datetime.utcnow() + timedelta(days=due_date_days)).strftime("%Y-%m-%d")
-    
+
     result = client.invoices.create_invoice(
         body={
             "idempotency_key": f"inv_{int(datetime.utcnow().timestamp() * 1000)}",
             "invoice": {
-                "location_id": SQUARE_LOCATION_ID,
+                "location_id": _cfg("CRM_SQUARE_LOCATION_ID"),
                 "customer_id": customer_id,
                 "title": title,
                 "description": description,
@@ -97,7 +94,6 @@ def create_invoice(customer_name, customer_email, amount_cents, currency, title,
             }
         }
     )
-    
     if result.is_success():
         invoice_id = result.body["invoice"]["id"]
         client.invoices.publish_invoice(invoice_id=invoice_id)
@@ -106,19 +102,14 @@ def create_invoice(customer_name, customer_email, amount_cents, currency, title,
         logger.error(f"Square create_invoice failed: {result.errors}")
         return {"error": str(result.errors)}
 
+
 def create_subscription(customer_email, customer_name, plan_price_cents, plan_name, cycle_months=1):
-    """Create a Square subscription (using catalog-based subscriptions)."""
     if not square_enabled():
         return {"demo": True, "subscription_id": f"sq_sub_demo_{int(datetime.utcnow().timestamp())}"}
-    
-    from square.client import Client
-    client = Client(
-        access_token=SQUARE_ACCESS_TOKEN,
-        environment=SQUARE_ENVIRONMENT,
-    )
-    
+
+    client = _client()
     customer_id = _find_or_create_customer(client, customer_name, customer_email)
-    
+
     result = client.catalog.upsert_object(
         body={
             "idempotency_key": f"sub_{int(datetime.utcnow().timestamp() * 1000)}",
@@ -139,13 +130,12 @@ def create_subscription(customer_email, customer_name, plan_price_cents, plan_na
             }
         }
     )
-    
     if result.is_success():
         plan_id = result.body["id_mappings"][0]["object_id"]
         sub_result = client.subscriptions.create_subscription(
             body={
                 "idempotency_key": f"sub_create_{int(datetime.utcnow().timestamp() * 1000)}",
-                "location_id": SQUARE_LOCATION_ID,
+                "location_id": _cfg("CRM_SQUARE_LOCATION_ID"),
                 "customer_id": customer_id,
                 "plan_id": plan_id,
                 "start_date": datetime.utcnow().strftime("%Y-%m-%d"),
@@ -156,31 +146,31 @@ def create_subscription(customer_email, customer_name, plan_price_cents, plan_na
         return {"error": str(sub_result.errors)}
     return {"error": str(result.errors)}
 
+
 def cancel_subscription(subscription_id):
-    """Cancel a Square subscription."""
     if not square_enabled():
         return {"demo": True}
-    from square.client import Client
-    client = Client(access_token=SQUARE_ACCESS_TOKEN, environment=SQUARE_ENVIRONMENT)
+    client = _client()
     result = client.subscriptions.cancel_subscription(subscription_id=subscription_id)
     return {"success": result.is_success()}
 
+
 def verify_webhook_signature(body, signature_header, notification_url):
-    """Verify Square webhook signature."""
-    if not SQUARE_WEBHOOK_SIGNATURE_KEY:
+    key = _cfg("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY")
+    if not key:
         return True
     payload = body + notification_url
-    expected = hmac.new(SQUARE_WEBHOOK_SIGNATURE_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    expected = hmac.new(key.encode(), payload.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, signature_header)
 
+
 def _find_or_create_customer(client, name, email):
-    """Find or create a Square customer."""
     result = client.customers.search_customers(
         body={"query": {"filter": {"email_address": {"exact": email}}}}
     )
     if result.is_success() and result.body.get("customers"):
         return result.body["customers"][0]["id"]
-    
+
     result = client.customers.create_customer(
         body={
             "idempotency_key": f"cust_{int(datetime.utcnow().timestamp() * 1000)}",
