@@ -3,6 +3,7 @@
 <div class="card"><div class="card-body p-0">
 <table class="table table-sm mb-0"><thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th><th>Type</th><th>Rating</th></tr></thead>
 <tbody>{% for v in vendors %}<tr><td>{{ v.name }}</td><td>{{ v.contact_person or '' }}</td><td>{{ v.phone or '' }}</td><td>{{ v.email or '' }}</td><td>{{ v.vendor_type or '' }}</td><td>{% if v.rating > 0 %}{% for i in range(v.rating) %}★{% endfor %}{% endif %}</td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No vendors</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 <div class="modal fade" id="newModal"><div class="modal-dialog modal-sm"><div class="modal-content">
 <form method="POST" action="/ops/vendors/new"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="modal-header"><h6 class="modal-title">New Vendor</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

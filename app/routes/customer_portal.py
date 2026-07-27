@@ -122,8 +122,8 @@ def work_orders():
         page = int(request.args.get("page", 1))
         query = db.query(WorkOrder).filter(WorkOrder.customer_id == customer.id).order_by(WorkOrder.created_at.desc())
         pagination = paginate(query, page)
-        wos = pagination["rows"]
-    return render_template("portal/work_orders.html", work_orders=wos, customer=customer, pagination=pagination)
+        wos = p["rows"]
+    return render_template("portal/work_orders.html", work_orders=wos, customer=customer, p=pagination)
 
 
 @bp.route("/invoices")
@@ -140,8 +140,8 @@ def invoices():
             page = int(request.args.get("page", 1))
             query = db.query(Invoice).filter(Invoice.work_order_id.in_(wo_ids)).order_by(Invoice.created_at.desc())
             pagination = paginate(query, page)
-            invoice_list = pagination["rows"]
-    return render_template("portal/invoices.html", invoices=invoice_list, customer=customer, pagination=pagination)
+            invoice_list = p["rows"]
+    return render_template("portal/invoices.html", invoices=invoice_list, customer=customer, p=pagination)
 
 
 @bp.route("/messages", methods=["GET", "POST"])
@@ -169,7 +169,7 @@ def messages():
         CustomerPortalMessage.portal_user_id == user.id
     ).order_by(CustomerPortalMessage.created_at.desc())
     pagination = paginate(query, page)
-    return render_template("portal/messages.html", messages=pagination["rows"], pagination=pagination)
+    return render_template("portal/messages.html", messages=p["rows"], p=pagination)
 
 
 @bp.route("/request-service", methods=["GET", "POST"])
@@ -248,7 +248,7 @@ def admin_customers():
     page = int(request.args.get("page", 1))
     query = db.query(CustomerPortalUser).order_by(CustomerPortalUser.created_at.desc())
     pagination = paginate(query, page)
-    return render_template("portal/admin_customers.html", portal_users=pagination["rows"], pagination=pagination)
+    return render_template("portal/admin_customers.html", portal_users=p["rows"], p=pagination)
 
 
 @bp.route("/admin/message/<int:msg_id>/reply", methods=["POST"])

@@ -3,4 +3,5 @@
 <div class="card"><div class="card-body p-0">
 <table class="table table-sm mb-0"><thead><tr><th>Old Part #</th><th>→ New Part #</th><th>Notes</th></tr></thead>
 <tbody>{% for s in items %}<tr><td>{{ s.old_part_number or s.old_part.part_number if s.old_part else '' }}</td><td><strong>{{ s.new_part_number or s.new_part.part_number if s.new_part else '' }}</strong></td><td><small>{{ s.notes or '' }}</small></td></tr>{% else %}<tr><td colspan="3" class="text-muted text-center">No supersessions</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

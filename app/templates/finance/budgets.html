@@ -6,4 +6,5 @@
 <div class="card"><div class="card-body p-0">
 <table class="table table-sm mb-0"><thead><tr><th>Category</th><th class="text-end">Budgeted</th></tr></thead>
 <tbody>{% for b in budgets %}<tr><td>{{ b.category or 'Uncategorized' }}{% if b.month %} ({{ b.month }}){% endif %}</td><td class="text-end">${{ '%.2f'|format(b.budgeted_amount) }}</td></tr>{% else %}<tr><td colspan="2" class="text-muted text-center">No budget entries</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

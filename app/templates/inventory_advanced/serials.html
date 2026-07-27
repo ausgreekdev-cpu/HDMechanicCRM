@@ -3,4 +3,5 @@
 <div class="card"><div class="card-body p-0">
 <table class="table table-sm mb-0"><thead><tr><th>Serial #</th><th>Part</th><th>Status</th><th>WO</th><th>PO</th></tr></thead>
 <tbody>{% for s in serials %}<tr><td><code>{{ s.serial_number }}</code></td><td>{{ s.part.name if s.part else '' }}</td><td><span class="badge bg-{{ 'success' if s.status == 'In Stock' else 'warning' }}">{{ s.status }}</span></td><td>{% if s.work_order %}<a href="/work-orders/{{ s.work_order.id }}">#{{ s.work_order.id }}</a>{% endif %}</td><td>{% if s.purchase_order %}{{ s.purchase_order.po_number }}{% endif %}</td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">No serial numbers</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

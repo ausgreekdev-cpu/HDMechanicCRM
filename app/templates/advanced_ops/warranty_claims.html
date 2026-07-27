@@ -7,6 +7,7 @@
 <td class="text-end">${{ '%.2f'|format(c.total_claim) }}</td>
 <td><span class="badge bg-{{ 'success' if c.status == 'Approved' else 'warning' if c.status == 'Open' else 'secondary' }}">{{ c.status }}</span></td>
 <td><small>{{ c.created_at.strftime('%m/%d/%Y') }}</small></td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No claims</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 <div class="modal fade" id="newModal"><div class="modal-dialog modal-sm"><div class="modal-content">
 <form method="POST" action="/ops/warranty-claims/new"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="modal-header"><h6 class="modal-title">File Warranty Claim</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

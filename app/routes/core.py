@@ -79,7 +79,7 @@ def admin_users():
     page = int(request.args.get("page", 1))
     query = db.query(User).order_by(User.username)
     pagination = paginate(query, page)
-    return render_template("admin/users.html", users=pagination["rows"], pagination=pagination, active_page="admin_users")
+    return render_template("admin/users.html", users=p["rows"], p=pagination, active_page="admin_users")
 
 
 @bp.route("/admin/users/new", methods=["POST"])
@@ -264,7 +264,7 @@ def technician_efficiency():
     query = db.query(Technician).filter(Technician.is_active == True).order_by(Technician.name)
     pagination = paginate(query, page)
     results = []
-    for t in pagination["rows"]:
+    for t in p["rows"]:
         total_hours = db.query(func.sum(WorkOrder.labor_hours)).join(
             Schedule, Schedule.work_order_id == WorkOrder.id
         ).filter(Schedule.technician_id == t.id, WorkOrder.status == "Completed").scalar() or 0
@@ -274,7 +274,7 @@ def technician_efficiency():
         results.append({"name": t.name, "specialization": t.specialization or "",
                         "hourly_rate": t.hourly_rate, "total_hours": total_hours,
                         "wo_count": wo_count, "earned": total_hours * t.hourly_rate})
-    return render_template("reports/tech_efficiency.html", techs=results, pagination=pagination, active_page="reports")
+    return render_template("reports/tech_efficiency.html", techs=results, p=pagination, active_page="reports")
 
 
 # ---- Alerts ----
@@ -287,7 +287,7 @@ def list_alerts():
     query = db.query(Alert).order_by(Alert.created_at.desc())
     pagination = paginate(query, page)
     unread = db.query(Alert).filter(Alert.is_read == False).count()
-    return render_template("alerts.html", alerts=pagination["rows"], pagination=pagination, unread=unread, active_page="alerts")
+    return render_template("alerts.html", alerts=p["rows"], p=pagination, unread=unread, active_page="alerts")
 
 
 @bp.route("/alerts/<int:alert_id>/read", methods=["POST"])
@@ -312,7 +312,7 @@ def list_service_reminders():
     query = db.query(ServiceReminder).order_by(ServiceReminder.vehicle_id)
     pagination = paginate(query, page)
     vehicles = db.query(Vehicle).order_by(Vehicle.make).all()
-    return render_template("service_reminders.html", reminders=pagination["rows"], pagination=pagination,
+    return render_template("service_reminders.html", reminders=p["rows"], p=pagination,
                            vehicles=vehicles, active_page="service_reminders")
 
 
@@ -522,7 +522,7 @@ def list_recurring_work_orders():
     pagination = paginate(query, page)
     customers = db.query(Customer).order_by(Customer.name).all()
     vehicles = db.query(Vehicle).order_by(Vehicle.make).all()
-    return render_template("recurring_wo/list.html", items=pagination["rows"], pagination=pagination, customers=customers,
+    return render_template("recurring_wo/list.html", items=p["rows"], p=pagination, customers=customers,
                            vehicles=vehicles, active_page="recurring_wo")
 
 

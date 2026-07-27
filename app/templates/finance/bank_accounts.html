@@ -6,4 +6,5 @@
 <h3 class="mt-2 {% if a.balance < 0 %}text-danger{% else %}text-success{% endif %}">${{ '%.2f'|format(a.balance) }}</h3>
 <a href="/finance/bank-accounts/{{ a.id }}/transactions" class="btn btn-sm btn-outline-primary">Transactions</a>
 </div></div></div>{% else %}<div class="col-12"><div class="card"><div class="card-body text-muted text-center">No bank accounts</div></div></div>{% endfor %}</div>
+{% include "pagination.html" %}
 {% endblock %}

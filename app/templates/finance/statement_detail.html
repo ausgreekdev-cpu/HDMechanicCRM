@@ -7,4 +7,5 @@
 <tbody>{% for inv in invoices %}<tr><td>{{ inv.invoice_number }}</td><td>{{ inv.created_at.strftime('%m/%d/%Y') }}</td><td class="text-end">${{ '%.2f'|format(inv.total_amount) }}</td><td class="text-end">${{ '%.2f'|format(inv.amount_paid) }}</td><td class="text-end text-danger fw-bold">${{ '%.2f'|format(inv.total_amount - inv.amount_paid) }}</td></tr>{% endfor %}</tbody>
 <tfoot><tr class="fw-bold"><td colspan="4" class="text-end">Total Due:</td><td class="text-end text-danger">${{ '%.2f'|format(total_due) }}</td></tr></tfoot></table>
 </div></div>
+{% include "pagination.html" %}
 {% endblock %}

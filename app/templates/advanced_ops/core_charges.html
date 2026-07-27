@@ -8,6 +8,7 @@
 <td>{{ c.returns|length }}</td>
 <td><button class="btn btn-sm btn-outline-success" onclick="document.getElementById('returnForm{{ c.id }}').style.display='block'">Return</button>
 <form id="returnForm{{ c.id }}" method="POST" action="/ops/core-charges/{{ c.id }}/return" style="display:none"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="number" step="0.01" name="refund_amount" class="form-control form-control-sm d-inline" style="width:100px" value="{{ c.charge_amount }}"><button class="btn btn-sm btn-success">Record Return</button></form></td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">No core charges</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 <div class="modal fade" id="newModal"><div class="modal-dialog modal-sm"><div class="modal-content">
 <form method="POST" action="/ops/core-charges/new"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="modal-header"><h6 class="modal-title">New Core Charge</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

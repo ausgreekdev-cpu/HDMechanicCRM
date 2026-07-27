@@ -5,4 +5,5 @@
 <tbody>{% for a in appts %}<tr><td><small>{{ a.appointment_date.strftime('%m/%d/%Y %I:%M %p') }}</small></td><td>{{ a.customer.name if a.customer else '' }}</td><td>{{ a.title }}</td><td>{{ a.duration_minutes }}m</td>
 <td><span class="badge bg-{{ 'success' if a.status == 'Scheduled' else 'info' if a.status == 'Confirmed' else 'secondary' }}">{{ a.status }}</span></td>
 <td><form method="POST" action="/crm/appointments/{{ a.id }}/status"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><select name="status" class="form-select form-select-sm d-inline" style="width:auto" onchange="this.form.submit()"><option value="Scheduled" {{ 'selected' if a.status == 'Scheduled' }}>Scheduled</option><option value="Confirmed" {{ 'selected' if a.status == 'Confirmed' }}>Confirmed</option><option value="Completed" {{ 'selected' if a.status == 'Completed' }}>Completed</option><option value="Cancelled" {{ 'selected' if a.status == 'Cancelled' }}>Cancelled</option></select></form></td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No appointments</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

@@ -86,7 +86,7 @@ def list_surveys():
     pagination = paginate(db.query(CustomerSurvey).order_by(CustomerSurvey.created_at.desc()), page)
     avg_nps = db.query(func.avg(CustomerSurvey.nps_score)).scalar() or 0
     avg_rating = db.query(func.avg(CustomerSurvey.rating)).scalar() or 0
-    return render_template("crm_advanced/surveys.html", pagination=pagination,
+    return render_template("crm_advanced/surveys.html", p=pagination,
                            avg_nps=round(avg_nps, 1), avg_rating=round(avg_rating, 1),
                            active_page="surveys")
 
@@ -116,7 +116,7 @@ def list_loyalty():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(CustomerLoyaltyTier).order_by(CustomerLoyaltyTier.customer_id), page)
-    return render_template("crm_advanced/loyalty.html", pagination=pagination, active_page="loyalty")
+    return render_template("crm_advanced/loyalty.html", p=pagination, active_page="loyalty")
 
 
 @bp.route("/loyalty/new", methods=["POST"])
@@ -143,7 +143,7 @@ def list_appointments():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(Appointment).order_by(Appointment.appointment_date.desc()), page)
-    return render_template("crm_advanced/appointments.html", pagination=pagination, active_page="appointments")
+    return render_template("crm_advanced/appointments.html", p=pagination, active_page="appointments")
 
 
 @bp.route("/appointments/new", methods=["POST"])
@@ -223,7 +223,7 @@ def list_labor_standards():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(LaborStandard).order_by(LaborStandard.category, LaborStandard.name), page)
-    return render_template("crm_advanced/labor_standards.html", pagination=pagination, active_page="labor_standards")
+    return render_template("crm_advanced/labor_standards.html", p=pagination, active_page="labor_standards")
 
 
 @bp.route("/labor-standards/new", methods=["POST"])
@@ -249,7 +249,7 @@ def list_saved_filters():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(SavedFilter).filter(SavedFilter.user_id == session.get("user_id")).order_by(SavedFilter.name), page)
-    return render_template("crm_advanced/saved_filters.html", pagination=pagination, active_page="saved_filters")
+    return render_template("crm_advanced/saved_filters.html", p=pagination, active_page="saved_filters")
 
 
 @bp.route("/saved-filters/new", methods=["POST"])
@@ -276,7 +276,7 @@ def list_widgets():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(DashboardWidget).filter(DashboardWidget.user_id == session.get("user_id")).order_by(DashboardWidget.position), page)
-    return render_template("crm_advanced/dashboard_widgets.html", pagination=pagination, active_page="dashboard_widgets")
+    return render_template("crm_advanced/dashboard_widgets.html", p=pagination, active_page="dashboard_widgets")
 
 
 @bp.route("/dashboard-widgets/new", methods=["POST"])
@@ -312,7 +312,7 @@ def list_workflow_rules():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(WorkflowRule).order_by(WorkflowRule.name), page)
-    return render_template("crm_advanced/workflow_rules.html", pagination=pagination, active_page="workflow_rules")
+    return render_template("crm_advanced/workflow_rules.html", p=pagination, active_page="workflow_rules")
 
 
 @bp.route("/workflow-rules/new", methods=["POST"])
@@ -346,7 +346,7 @@ def list_certifications():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(TechnicianCertification).order_by(TechnicianCertification.technician_id), page)
-    return render_template("crm_advanced/certifications.html", pagination=pagination, active_page="certifications")
+    return render_template("crm_advanced/certifications.html", p=pagination, active_page="certifications")
 
 
 @bp.route("/certifications/new", methods=["POST"])
@@ -374,7 +374,7 @@ def list_shop_supplies():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(ShopSupply).order_by(ShopSupply.name), page)
-    return render_template("crm_advanced/shop_supplies.html", pagination=pagination, active_page="shop_supplies")
+    return render_template("crm_advanced/shop_supplies.html", p=pagination, active_page="shop_supplies")
 
 
 @bp.route("/shop-supplies/new", methods=["POST"])
@@ -402,7 +402,7 @@ def list_sds():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(SDSDocument).order_by(SDSDocument.uploaded_at.desc()), page)
-    return render_template("crm_advanced/sds_documents.html", pagination=pagination, active_page="sds_documents")
+    return render_template("crm_advanced/sds_documents.html", p=pagination, active_page="sds_documents")
 
 
 # ---- Check-In Process ----
@@ -445,7 +445,7 @@ def list_environmental():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(EnvironmentalRecord).order_by(EnvironmentalRecord.date.desc()), page)
-    return render_template("crm_advanced/environmental.html", pagination=pagination, active_page="environmental")
+    return render_template("crm_advanced/environmental.html", p=pagination, active_page="environmental")
 
 
 @bp.route("/environmental/new", methods=["POST"])
@@ -476,7 +476,7 @@ def list_sublet():
     db = g.db
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(NonStockItem).filter(NonStockItem.supplier != "").order_by(NonStockItem.name), page)
-    return render_template("crm_advanced/sublet.html", pagination=pagination, active_page="sublet")
+    return render_template("crm_advanced/sublet.html", p=pagination, active_page="sublet")
 
 
 # ---- Bulk Operations ----
@@ -531,4 +531,4 @@ def odometer_service():
     page = int(request.args.get("page", 1))
     pagination = paginate(db.query(ServiceReminder).filter(ServiceReminder.is_active == True,
                                                   ServiceReminder.next_due_miles != None).order_by(ServiceReminder.next_due_miles), page)
-    return render_template("crm_advanced/odometer_service.html", pagination=pagination, active_page="odometer_service")
+    return render_template("crm_advanced/odometer_service.html", p=pagination, active_page="odometer_service")

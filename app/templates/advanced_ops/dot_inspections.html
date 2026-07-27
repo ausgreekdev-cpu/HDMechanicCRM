@@ -5,4 +5,5 @@
 <tbody>{% for i in inspections %}<tr><td><small>{{ i.inspection_date.strftime('%m/%d/%Y') }}</small></td><td>{{ i.vehicle.make }} {{ i.vehicle.model }}</td><td>{{ i.inspector or '' }}</td><td>{{ i.inspection_type or '' }}</td>
 <td>{% if i.result == 'Pass' %}<span class="badge bg-success">Pass</span>{% else %}<span class="badge bg-danger">Fail</span>{% endif %}</td>
 <td>{{ i.certificate_number or '' }}</td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No inspections</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

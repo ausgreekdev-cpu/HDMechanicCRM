@@ -8,4 +8,5 @@
 <div class="col"><input type="number" name="vehicle_id" class="form-control form-control-sm" placeholder="Vehicle ID" required></div>
 <div class="col"><input type="text" name="unit_number" class="form-control form-control-sm" placeholder="Unit #"></div>
 <div class="col"><button class="btn btn-sm btn-primary">Add Vehicle</button></div></form></div></div>{% else %}<div class="card"><div class="card-body text-muted text-center">No fleet groups</div></div>{% endfor %}
+{% include "pagination.html" %}
 {% endblock %}

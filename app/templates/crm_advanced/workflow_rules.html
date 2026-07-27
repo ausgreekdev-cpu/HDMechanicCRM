@@ -3,4 +3,5 @@
 <div class="card"><div class="card-body p-0">
 <table class="table table-sm mb-0"><thead><tr><th>Name</th><th>Trigger</th><th>Active</th><th></th></tr></thead>
 <tbody>{% for r in rules %}<tr><td>{{ r.name }}</td><td><code>{{ r.trigger_event }}</code></td><td>{% if r.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td><td><form method="POST" action="/crm/workflow-rules/{{ r.id }}/toggle"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-secondary">Toggle</button></form></td></tr>{% else %}<tr><td colspan="4" class="text-muted text-center">No workflow rules</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

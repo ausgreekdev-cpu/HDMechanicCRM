@@ -3,4 +3,5 @@
 <div class="card"><div class="card-body p-0">
 <table class="table table-sm mb-0"><thead><tr><th>Original Part</th><th>Type</th><th>Cross Part #</th><th>Brand</th><th>Description</th></tr></thead>
 <tbody>{% for r in refs %}<tr><td>{{ r.part.name if r.part else '#'+r.part_id|string }}</td><td><span class="badge bg-info">{{ r.cross_type }}</span></td><td><strong>{{ r.cross_part_number }}</strong></td><td>{{ r.cross_brand or '' }}</td><td><small>{{ r.cross_description or '' }}</small></td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">No cross references</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

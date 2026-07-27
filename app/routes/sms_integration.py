@@ -113,7 +113,7 @@ def templates_list():
     page = int(request.args.get("page", 1))
     query = db.query(SMSTemplate).order_by(SMSTemplate.name)
     pagination = paginate(query, page)
-    return render_template("sms/templates.html", templates=pagination["rows"], pagination=pagination, active_page="sms")
+    return render_template("sms/templates.html", templates=p["rows"], p=pagination, active_page="sms")
 
 
 @bp.route("/templates/<int:tid>/delete", methods=["POST"])

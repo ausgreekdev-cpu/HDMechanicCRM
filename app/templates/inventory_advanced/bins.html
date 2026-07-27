@@ -3,4 +3,5 @@
 <div class="card"><div class="card-body p-0">
 <table class="table table-sm mb-0"><thead><tr><th>Warehouse</th><th>Bin Code</th><th>Part</th><th>Max Capacity</th></tr></thead>
 <tbody>{% for b in bins %}<tr><td>{{ b.warehouse.name if b.warehouse else '' }}</td><td><strong>{{ b.bin_code }}</strong></td><td>{{ b.part.name if b.part else 'Empty' }}</td><td>{{ b.max_capacity }}</td></tr>{% else %}<tr><td colspan="4" class="text-muted text-center">No bins</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

@@ -16,7 +16,7 @@ def list_warehouses():
     db = g.db
     query = db.query(Warehouse).order_by(Warehouse.name)
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/warehouses.html", warehouses=pagination["rows"], pagination=pagination, active_page="warehouses")
+    return render_template("inventory_advanced/warehouses.html", warehouses=p["rows"], p=pagination, active_page="warehouses")
 
 
 @bp.route("/warehouses/new", methods=["POST"])
@@ -40,7 +40,7 @@ def list_bins():
     query = db.query(BinLocation).order_by(BinLocation.bin_code)
     pagination = paginate(query, request.args.get("page", 1, type=int))
     warehouses = db.query(Warehouse).order_by(Warehouse.name).all()
-    return render_template("inventory_advanced/bins.html", bins=pagination["rows"], pagination=pagination, warehouses=warehouses, active_page="bins")
+    return render_template("inventory_advanced/bins.html", bins=p["rows"], p=pagination, warehouses=warehouses, active_page="bins")
 
 
 @bp.route("/bins/new", methods=["POST"])
@@ -67,7 +67,7 @@ def list_serial_numbers():
     db = g.db
     query = db.query(SerialNumber).order_by(SerialNumber.created_at.desc())
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/serials.html", serials=pagination["rows"], pagination=pagination, active_page="serials")
+    return render_template("inventory_advanced/serials.html", serials=p["rows"], p=pagination, active_page="serials")
 
 
 @bp.route("/serial-numbers/new", methods=["POST"])
@@ -93,7 +93,7 @@ def list_kits():
     db = g.db
     query = db.query(KitAssembly).order_by(KitAssembly.name)
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/kits.html", kits=pagination["rows"], pagination=pagination, active_page="kits")
+    return render_template("inventory_advanced/kits.html", kits=p["rows"], p=pagination, active_page="kits")
 
 
 @bp.route("/kits/new", methods=["POST"])
@@ -122,7 +122,7 @@ def list_supersessions():
     db = g.db
     query = db.query(PartSupersession).order_by(PartSupersession.superseded_at.desc())
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/supersessions.html", items=pagination["rows"], pagination=pagination, active_page="supersessions")
+    return render_template("inventory_advanced/supersessions.html", items=p["rows"], p=pagination, active_page="supersessions")
 
 
 @bp.route("/supersessions/new", methods=["POST"])
@@ -149,7 +149,7 @@ def list_non_stock():
     db = g.db
     query = db.query(NonStockItem).order_by(NonStockItem.name)
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/non_stock.html", items=pagination["rows"], pagination=pagination, active_page="non_stock")
+    return render_template("inventory_advanced/non_stock.html", items=p["rows"], p=pagination, active_page="non_stock")
 
 
 @bp.route("/non-stock/new", methods=["POST"])
@@ -177,7 +177,7 @@ def list_consignment():
     db = g.db
     query = db.query(ConsignmentItem).order_by(ConsignmentItem.supplier)
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/consignment.html", items=pagination["rows"], pagination=pagination, active_page="consignment")
+    return render_template("inventory_advanced/consignment.html", items=p["rows"], p=pagination, active_page="consignment")
 
 
 @bp.route("/consignment/new", methods=["POST"])
@@ -202,7 +202,7 @@ def list_cycle_counts():
     db = g.db
     query = db.query(CycleCount).order_by(CycleCount.count_date.desc())
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/cycle_counts.html", counts=pagination["rows"], pagination=pagination, active_page="cycle_counts")
+    return render_template("inventory_advanced/cycle_counts.html", counts=p["rows"], p=pagination, active_page="cycle_counts")
 
 
 @bp.route("/cycle-counts/new", methods=["POST"])
@@ -236,7 +236,7 @@ def list_transfers():
     db = g.db
     query = db.query(InventoryTransfer).order_by(InventoryTransfer.created_at.desc())
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/transfers.html", transfers=pagination["rows"], pagination=pagination, active_page="transfers")
+    return render_template("inventory_advanced/transfers.html", transfers=p["rows"], p=pagination, active_page="transfers")
 
 
 @bp.route("/transfers/new", methods=["POST"])
@@ -264,7 +264,7 @@ def list_scorecards():
     db = g.db
     query = db.query(SupplierScorecard).order_by(SupplierScorecard.rating_date.desc())
     pagination = paginate(query, request.args.get("page", 1, type=int))
-    return render_template("inventory_advanced/scorecards.html", cards=pagination["rows"], pagination=pagination, active_page="scorecards")
+    return render_template("inventory_advanced/scorecards.html", cards=p["rows"], p=pagination, active_page="scorecards")
 
 
 @bp.route("/scorecards/new", methods=["POST"])

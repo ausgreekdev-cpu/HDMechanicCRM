@@ -69,7 +69,7 @@ def category(slug):
     pagination = paginate(query, page)
     user_plan = _get_user_plan()
     return render_template("marketplace/category.html",
-        category=cat, templates=pagination["rows"], pagination=pagination,
+        category=cat, templates=p["rows"], p=pagination,
         user_plan=user_plan, has_access=_user_has_template_access)
 
 
@@ -177,7 +177,7 @@ def my_templates():
         UserSubscription.status == "active"
     ).first()
     return render_template("marketplace/my_templates.html",
-        purchases=pagination["rows"], pagination=pagination, subscription=sub)
+        purchases=p["rows"], p=pagination, subscription=sub)
 
 
 @bp.route("/api/check-access/<int:tid>")

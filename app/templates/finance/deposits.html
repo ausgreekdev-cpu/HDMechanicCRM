@@ -3,4 +3,5 @@
 <div class="card"><div class="card-body p-0">
 <table class="table table-sm mb-0"><thead><tr><th>Customer</th><th class="text-end">Amount</th><th class="text-end">Balance</th><th>Method</th><th>Reference</th><th>Date</th></tr></thead>
 <tbody>{% for d in deposits %}<tr><td>{{ d.customer.name if d.customer else '' }}</td><td class="text-end">${{ '%.2f'|format(d.amount) }}</td><td class="text-end">${{ '%.2f'|format(d.balance) }}</td><td>{{ d.payment_method }}</td><td>{{ d.reference or '' }}</td><td><small>{{ d.created_at.strftime('%m/%d/%Y') }}</small></td></tr>{% else %}<tr><td colspan="6" class="text-muted text-center">No deposits</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}

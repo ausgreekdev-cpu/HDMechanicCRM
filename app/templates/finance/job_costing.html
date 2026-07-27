@@ -10,4 +10,5 @@
 <td class="text-end {% if r.profit < 0 %}text-danger{% else %}text-success{% endif %}">${{ '%.0f'|format(r.profit) }}</td>
 <td class="text-end {% if r.margin_pct < 0 %}text-danger{% endif %}">{{ '%.1f'|format(r.margin_pct) }}%</td>
 </tr>{% else %}<tr><td colspan="9" class="text-muted text-center">No completed work orders</td></tr>{% endfor %}</tbody></table></div></div>
+{% include "pagination.html" %}
 {% endblock %}
