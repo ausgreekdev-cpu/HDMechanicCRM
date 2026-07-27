@@ -1,13 +1,27 @@
 import os
 import logging
 from datetime import datetime, timezone
+from functools import wraps
 from flask import Flask, g, session, request, render_template
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_caching import Cache
+import redis
 from app.database import SessionLocal
 
-limiter = Limiter(key_func=get_remote_address)
+redis_url = os.environ.get("CRM_REDIS_URL", "redis://localhost:6379/0")
+try:
+    redis_client = redis.from_url(redis_url, decode_responses=True)
+    redis_client.ping()
+    USE_REDIS = True
+except Exception:
+    redis_client = None
+    USE_REDIS = False
+
+cache = Cache(config={"CACHE_TYPE": "RedisCache", "CACHE_REDIS_URL": redis_url} if USE_REDIS else {"CACHE_TYPE": "SimpleCache"})
+storage_uri = redis_url if USE_REDIS else "memory://"
+limiter = Limiter(key_func=get_remote_address, storage_uri=storage_uri)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,6 +29,24 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("crm")
+
+
+def cached_query(key_prefix, timeout=30):
+    """Decorator to cache query results using Flask-Caching."""
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            if not USE_REDIS:
+                return f(*args, **kwargs)
+            cache_key = f"{key_prefix}:{hash(str(args) + str(kwargs))}"
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return cached
+            result = f(*args, **kwargs)
+            cache.set(cache_key, result, timeout=timeout)
+            return result
+        return wrapped
+    return decorator
 
 
 def create_app(config_override=None):
@@ -44,11 +76,16 @@ def create_app(config_override=None):
 
     app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
+    if USE_REDIS:
+        app.config["SESSION_TYPE"] = "redis"
+        app.config["SESSION_REDIS"] = redis_client
+
     if config_override:
         app.config.update(config_override)
 
     csrf = CSRFProtect(app)
     limiter.init_app(app)
+    cache.init_app(app)
 
     @app.errorhandler(403)
     def forbidden(e):
@@ -63,9 +100,6 @@ def create_app(config_override=None):
         logger.exception("Internal server error")
         return render_template("500.html", active_page=""), 500
 
-    _cache: dict = {}
-    _CACHE_TTL = 60
-
     @app.after_request
     def set_security_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -78,10 +112,6 @@ def create_app(config_override=None):
     def open_session():
         g.db = SessionLocal()
         g._req_start = datetime.now(timezone.utc)
-        _path = request.path
-        _cached = _cache.get(_path)
-        if _cached and (datetime.now(timezone.utc) - _cached["ts"]).total_seconds() < _CACHE_TTL:
-            g._cached_dashboard = _cached["data"]
 
     @app.after_request
     def log_request(response):
