@@ -69,11 +69,14 @@ if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
     except Exception as e:
         logging.warning(f"Scheduler failed to start: {e}")
 
-    try:
-        from app.seed import seed_demo_data
-        seed_demo_data()
-    except Exception as e:
-        logging.warning(f"Demo seed skipped: {e}")
+    # Demo customers are fake data — never seed them unless explicitly
+    # requested (local/demo environments: CRM_SEED_DEMO=1).
+    if os.environ.get("CRM_SEED_DEMO", "").lower() in ("1", "true", "yes"):
+        try:
+            from app.seed import seed_demo_data
+            seed_demo_data()
+        except Exception as e:
+            logging.warning(f"Demo seed skipped: {e}")
 
     try:
         from app.seed import seed_template_data

@@ -182,8 +182,8 @@ def seed_demo_data():
         # Invoices
         for wo in [w for w in work_orders if w.status == "Completed"][:20]:
             inv_items = db.query(WorkOrderItem).filter(WorkOrderItem.work_order_id == wo.id).all()
-            items_total = sum(ip.quantity * ip.unit_price for ip in inv_items)
-            labor = wo.labor_hours * 85
+            items_total = float(sum(ip.quantity * ip.unit_price for ip in inv_items))
+            labor = float(wo.labor_hours or 0) * 85
             inv_subtotal = items_total + labor
             inv_subtotal = max(inv_subtotal, 50)
             inv_total = round(inv_subtotal * 1.0825, 2)
