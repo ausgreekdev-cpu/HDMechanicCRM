@@ -1,4 +1,5 @@
 import os
+import hashlib
 import logging
 from datetime import datetime, timezone
 from functools import wraps
@@ -31,6 +32,19 @@ logging.basicConfig(
 logger = logging.getLogger("crm")
 
 
+def _stable_cache_key(prefix, args, kwargs):
+    """Process-independent cache key (hash() is salted per process)."""
+    parts = []
+    for value in list(args) + [f"{k}={v!r}" for k, v in sorted(kwargs.items())]:
+        text = repr(value)
+        if "object at 0x" in text:
+            cls = type(value)
+            text = f"<{cls.__module__}.{cls.__qualname__}>"
+        parts.append(text)
+    digest = hashlib.sha256("\x1f".join(parts).encode("utf-8", "replace")).hexdigest()
+    return f"{prefix}:{digest}"
+
+
 def cached_query(key_prefix, timeout=30):
     """Decorator to cache query results using Flask-Caching."""
     def decorator(f):
@@ -38,7 +52,7 @@ def cached_query(key_prefix, timeout=30):
         def wrapped(*args, **kwargs):
             if not USE_REDIS:
                 return f(*args, **kwargs)
-            cache_key = f"{key_prefix}:{hash(str(args) + str(kwargs))}"
+            cache_key = _stable_cache_key(key_prefix, args, kwargs)
             cached = cache.get(cache_key)
             if cached is not None:
                 return cached
