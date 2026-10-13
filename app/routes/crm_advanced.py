@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, jsonify, send_file, g
+from flask import Blueprint, render_template, request, redirect, flash, jsonify, send_file, g, session
 import logging, json
 from datetime import datetime, date, timedelta
 from app.timeutils import utcnow
@@ -483,7 +483,7 @@ def list_sublet():
 @bp.route("/bulk/<entity>", methods=["POST"])
 @login_required
 def bulk_operation(entity):
-    from app.models import WorkOrder, Invoice, Customer, Part
+    from app.models import Invoice, Part
     db = g.db
     try:
         ids = request.form.getlist("ids[]")

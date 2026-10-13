@@ -205,7 +205,7 @@ def heartbeat():
 @login_required
 @admin_required
 def dashboard():
-    from app.models.analytics import AppSession, PageView, FeatureUsage, DailyMetrics
+    from app.models.analytics import AppSession, PageView, FeatureUsage, DailyMetrics, CrashReport
     from app.models import WorkOrder, Customer
     db = g.db
     today = utcnow().strftime("%Y-%m-%d")

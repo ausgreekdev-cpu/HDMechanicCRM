@@ -4,24 +4,29 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 
+def _sqlite_data_dir():
+    if getattr(sys, 'frozen', False):
+        base = os.path.dirname(sys.executable)
+    else:
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, "data")
+
+
 def _get_database_url():
     env_url = os.environ.get("CRM_DATABASE_URL", "")
     if env_url:
         return env_url
 
-    if getattr(sys, 'frozen', False):
-        base = os.path.dirname(sys.executable)
-    else:
-        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-    data_dir = os.path.join(base, "data")
+    data_dir = _sqlite_data_dir()
     os.makedirs(data_dir, exist_ok=True)
-    db_path = os.path.join(data_dir, "crm.db")
-    return f"sqlite:///{db_path}"
+    return f"sqlite:///{os.path.join(data_dir, 'crm.db')}"
 
 
 DATABASE_URL = _get_database_url()
 _is_sqlite = DATABASE_URL.startswith("sqlite")
+
+# Filesystem path of the SQLite database (None when using another backend).
+DB_PATH = DATABASE_URL[len("sqlite:///"):] if _is_sqlite else None
 
 _engine_kwargs = {
     "echo": os.environ.get("CRM_DB_ECHO", "0") == "1",

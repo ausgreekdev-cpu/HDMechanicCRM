@@ -409,7 +409,10 @@ def chart_scrap():
 def backup_database():
     from app.database import DB_PATH
     from datetime import date
-    db = g.db
+    if not DB_PATH:
+        flash("Backup is only available when running on SQLite. "
+              "Use pg_dump for PostgreSQL databases.", "warning")
+        return redirect("/settings")
     backup_path = DB_PATH + f".backup-{date.today().isoformat()}"
     shutil.copy2(DB_PATH, backup_path)
     flash(f"Database backed up to data/", "success")
