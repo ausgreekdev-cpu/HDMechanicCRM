@@ -1,0 +1,8 @@
+# Focused rule set: catches real bugs (undefined names, redefinitions,
+# syntax errors) without requiring a whole-repo style cleanup.
+[lint]
+select = ["E9", "F63", "F7", "F82", "F811"]
+
+[lint.per-file-ignores]
+# Tests intentionally shadow names in fixtures.
+"tests/*" = ["F811"]
