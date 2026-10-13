@@ -165,6 +165,42 @@ def verify_webhook_signature(body, signature_header, notification_url):
     return hmac.compare_digest(expected, signature_header)
 
 
+def find_completed_payment(amount_cents, currency=None, exclude_ids=()):
+    """Return the id of a recent COMPLETED Square payment matching amount_cents.
+
+    Used to confirm that a checkout redirect actually corresponds to a
+    captured payment before granting a purchase or subscription.
+    Returns None when Square is disabled, the API call fails, or no
+    unconsumed match is found.
+    """
+    if not square_enabled():
+        return None
+    client = _client()
+    begin = (utcnow() - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        result = client.payments.list_payments(begin_time=begin, limit=100)
+    except Exception:
+        logger.exception("Square list_payments raised")
+        return None
+    if not result.is_success():
+        logger.error(f"Square list_payments failed: {result.errors}")
+        return None
+    excluded = set(exclude_ids)
+    for payment in result.body.get("payments", []):
+        if payment.get("status") != "COMPLETED":
+            continue
+        money = payment.get("amount_money") or {}
+        if money.get("amount") != amount_cents:
+            continue
+        if currency and money.get("currency") != currency:
+            continue
+        if payment.get("id") in excluded:
+            continue
+        return payment.get("id")
+    logger.warning(f"No completed Square payment found for amount={amount_cents}")
+    return None
+
+
 def _find_or_create_customer(client, name, email):
     result = client.customers.search_customers(
         body={"query": {"filter": {"email_address": {"exact": email}}}}

@@ -103,7 +103,7 @@ class UserSubscription(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     plan_id = Column(Integer, ForeignKey("subscription_plans.id"), nullable=False)
     billing_cycle = Column(String(20), default="monthly")  # monthly, yearly
-    status = Column(String(20), default="active")  # active, canceled, past_due, trialing
+    status = Column(String(20), default="active")  # active, canceled, past_due, trialing, pending
     stripe_subscription_id = Column(String(200), default="")
     stripe_customer_id = Column(String(200), default="")
     current_period_start = Column(DateTime, default=datetime.utcnow)
