@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, flash, Response, jsonify, g
 import logging, csv, io
 from datetime import datetime, date, timedelta
-from app.timeutils import utcnow
-from app.models import CreditMemo, Invoice, CustomerDeposit, Expense, WorkOrder, Budget, LateFeeRule, BankAccount, BankTransaction, Contractor1099, TaxExemption, Customer, WorkOrder, ScrapPickup, Payment
+from app.timeutils import utcnow, strftime_sql
+from app.models import CreditMemo, Invoice, CustomerDeposit, Expense, WorkOrder, Budget, LateFeeRule, BankAccount, BankTransaction, Contractor1099, TaxExemption, Customer, ScrapPickup, Payment
 from app.auth import login_required, role_required
 from app.audit import log_audit
 from app.helpers import paginate
@@ -161,13 +161,13 @@ def list_budgets():
     year = int(request.args.get("year", utcnow().year))
     page = int(request.args.get("page", 1))
     query = db.query(Budget).filter(Budget.year == year).order_by(Budget.category)
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     revenue = db.query(func.sum(WorkOrder.total_amount)).filter(
-        func.strftime("%Y", WorkOrder.updated_at) == str(year),
+        strftime_sql("%Y", WorkOrder.updated_at) == str(year),
         WorkOrder.status.in_(["Completed", "Invoiced"])).scalar() or 0
     expenses = db.query(func.sum(Expense.amount)).filter(
-        func.strftime("%Y", Expense.expense_date) == str(year)).scalar() or 0
-    return render_template("finance/budgets.html", budgets=p["rows"], p=pagination, year=year,
+        strftime_sql("%Y", Expense.expense_date) == str(year)).scalar() or 0
+    return render_template("finance/budgets.html", budgets=p["rows"], p=p, year=year,
                            revenue=revenue, expenses=expenses, active_page="budgets")
 
 
@@ -366,12 +366,12 @@ def revenue_by_category():
     from sqlalchemy import func
     year = int(request.args.get("year", utcnow().year))
     revenue = db.query(func.sum(WorkOrder.total_amount)).filter(
-        func.strftime("%Y", WorkOrder.updated_at) == str(year),
+        strftime_sql("%Y", WorkOrder.updated_at) == str(year),
         WorkOrder.status.in_(["Completed", "Invoiced"])).scalar() or 0
     scrap = db.query(func.sum(ScrapPickup.total_payout)).filter(
-        func.strftime("%Y", ScrapPickup.pickup_date) == str(year)).scalar() or 0
+        strftime_sql("%Y", ScrapPickup.pickup_date) == str(year)).scalar() or 0
     wo_count = db.query(WorkOrder).filter(
-        func.strftime("%Y", WorkOrder.updated_at) == str(year),
+        strftime_sql("%Y", WorkOrder.updated_at) == str(year),
         WorkOrder.status.in_(["Completed", "Invoiced"])).count() or 0
     return render_template("finance/revenue_categories.html", year=year,
                            revenue=revenue, scrap=scrap, wo_count=wo_count, active_page="revenue_categories")

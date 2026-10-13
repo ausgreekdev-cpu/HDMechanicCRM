@@ -1,6 +1,6 @@
 import os, csv, io, uuid, shutil, logging
 from datetime import datetime, timedelta
-from app.timeutils import utcnow
+from app.timeutils import utcnow, strftime_sql
 from flask import Blueprint, redirect, session, render_template, request, flash, jsonify, send_file, g
 from app.auth import hash_password, verify_password, login_required, admin_required
 from app.export import export_csv
@@ -370,7 +370,7 @@ def chart_revenue():
     from sqlalchemy import func
     db = g.db
     rows = db.query(
-        func.strftime("%Y-%m", WorkOrder.updated_at).label("month"),
+        strftime_sql("%Y-%m", WorkOrder.updated_at).label("month"),
         func.sum(WorkOrder.total_amount)
     ).filter(WorkOrder.status.in_(["Completed", "Invoiced"])).group_by("month").order_by("month").all()
     return jsonify(labels=[r.month for r in rows], values=[float(r[1] or 0) for r in rows])
@@ -396,7 +396,7 @@ def chart_scrap():
     from sqlalchemy import func
     db = g.db
     rows = db.query(
-        func.strftime("%Y-%m", ScrapPickup.pickup_date).label("month"),
+        strftime_sql("%Y-%m", ScrapPickup.pickup_date).label("month"),
         func.sum(ScrapPickup.total_payout)
     ).group_by("month").order_by("month").all()
     return jsonify(labels=[r.month for r in rows], values=[float(r[1] or 0) for r in rows])

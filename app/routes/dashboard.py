@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, g
 from sqlalchemy import func, extract
 from datetime import datetime
-from app.timeutils import utcnow
+from app.timeutils import utcnow, strftime_sql
 from app.models import Customer, Vehicle, WorkOrder, Part, ScrapPickup, Lead, Technician, Schedule, ScrapInventory, Alert, Invoice
 from app.auth import login_required
 from app import cache, USE_REDIS, cached_query
@@ -19,12 +19,12 @@ def _get_dashboard_stats(db):
     ).count()
     completed_this_month = db.query(WorkOrder).filter(
         WorkOrder.status == "Completed",
-        func.strftime("%Y-%m", WorkOrder.updated_at) == now.strftime("%Y-%m")
+        strftime_sql("%Y-%m", WorkOrder.updated_at) == now.strftime("%Y-%m")
     ).count()
     low_stock_parts = db.query(Part).filter(Part.quantity_on_hand <= Part.min_quantity).count()
     total_parts = db.query(Part).count()
     scrap_pickups_month = db.query(ScrapPickup).filter(
-        func.strftime("%Y-%m", ScrapPickup.pickup_date) == now.strftime("%Y-%m")
+        strftime_sql("%Y-%m", ScrapPickup.pickup_date) == now.strftime("%Y-%m")
     ).count()
     open_leads = db.query(Lead).filter(Lead.status.not_in(["Closed", "Converted"])).count()
     tech_count = db.query(Technician).filter(Technician.is_active == True).count()
