@@ -737,48 +737,6 @@ def parts_forecast():
     return render_template("reports/parts_forecast.html", results=results, active_page="reports")
 
 
-# ---- Customer Portal ----
-@bp.route("/portal/login", methods=["GET", "POST"])
-def portal_login():
-    if request.method == "POST":
-        from app.models import Customer
-        email = request.form.get("email", "").strip().lower()
-        ref = request.form.get("reference", "").strip()
-        db = g.db
-        customer = db.query(Customer).filter(
-            Customer.email.ilike(email), Customer.id.isnot(None)
-        ).first()
-        if customer and customer.phone == ref:
-            session["portal_customer_id"] = customer.id
-            session["portal_customer_name"] = customer.name
-            flash(f"Welcome, {customer.name}!", "success")
-            return redirect("/portal/dashboard")
-        flash("Invalid credentials", "danger")
-    return render_template("portal/login.html")
-
-
-@bp.route("/portal/dashboard")
-def portal_dashboard():
-    if "portal_customer_id" not in session:
-        return redirect("/portal/login")
-    from app.models import WorkOrder, Invoice, Vehicle, ServiceReminder
-    cid = session["portal_customer_id"]
-    db = g.db
-    wos = db.query(WorkOrder).filter(WorkOrder.customer_id == cid).order_by(WorkOrder.created_at.desc()).limit(10).all()
-    invoices = db.query(Invoice).join(WorkOrder).filter(WorkOrder.customer_id == cid).order_by(Invoice.created_at.desc()).limit(10).all()
-    vehicles = db.query(Vehicle).filter(Vehicle.customer_id == cid).all()
-    reminders = db.query(ServiceReminder).join(Vehicle).filter(Vehicle.customer_id == cid).all()
-    return render_template("portal/dashboard.html", wos=wos, invoices=invoices,
-                           vehicles=vehicles, reminders=reminders)
-
-
-@bp.route("/portal/logout")
-def portal_logout():
-    session.pop("portal_customer_id", None)
-    session.pop("portal_customer_name", None)
-    return redirect("/portal/login")
-
-
 # ---- Kanban Board View ----
 @bp.route("/kanban")
 @login_required
