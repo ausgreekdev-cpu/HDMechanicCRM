@@ -19,8 +19,8 @@ def list_credit_memos():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(CreditMemo).order_by(CreditMemo.created_at.desc())
-    pagination = paginate(query, page)
-    return render_template("finance/credit_memos.html", items=p["rows"], p=pagination, active_page="credit_memos")
+    p = paginate(query, page)
+    return render_template("finance/credit_memos.html", items=p["rows"], p=p, active_page="credit_memos")
 
 
 @bp.route("/credit-memos/new", methods=["POST"])
@@ -56,8 +56,8 @@ def list_deposits():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(CustomerDeposit).order_by(CustomerDeposit.created_at.desc())
-    pagination = paginate(query, page)
-    return render_template("finance/deposits.html", deposits=p["rows"], p=pagination, active_page="deposits")
+    p = paginate(query, page)
+    return render_template("finance/deposits.html", deposits=p["rows"], p=p, active_page="deposits")
 
 
 @bp.route("/deposits/new", methods=["POST"])
@@ -87,7 +87,7 @@ def ar_aging():
     now = utcnow()
     page = int(request.args.get("page", 1))
     query = db.query(Invoice).filter(Invoice.status.in_(["Unpaid", "Partial"])).order_by(Invoice.created_at)
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     aging = {"0-30": [], "31-60": [], "61-90": [], "90+": []}
     for inv in p["rows"]:
         days = (now - inv.created_at).days
@@ -98,7 +98,7 @@ def ar_aging():
         elif days <= 90: aging["61-90"].append(row)
         else: aging["90+"].append(row)
     totals = {k: sum(r["due"] for r in v) for k, v in aging.items()}
-    return render_template("finance/ar_aging.html", aging=aging, totals=totals, p=pagination, active_page="ar_aging")
+    return render_template("finance/ar_aging.html", aging=aging, totals=totals, p=p, active_page="ar_aging")
 
 
 # ---- Expenses ----
@@ -139,7 +139,7 @@ def job_costing():
     from sqlalchemy import func
     page = int(request.args.get("page", 1))
     query = db.query(WorkOrder).filter(WorkOrder.status.in_(["Completed", "Invoiced"])).order_by(WorkOrder.updated_at.desc())
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     results = []
     for wo in p["rows"]:
         parts_cost = wo.parts_total
@@ -150,7 +150,7 @@ def job_costing():
         results.append({"wo": wo, "parts_cost": parts_cost, "labor_cost": labor_cost,
                        "expenses": expenses, "total_cost": total_cost, "revenue": revenue,
                        "profit": revenue - total_cost, "margin_pct": ((revenue - total_cost) / revenue * 100) if revenue else 0})
-    return render_template("finance/job_costing.html", results=results, p=pagination, active_page="job_costing")
+    return render_template("finance/job_costing.html", results=results, p=p, active_page="job_costing")
 
 
 # ---- Budget vs Actual ----
@@ -194,8 +194,8 @@ def list_late_fee_rules():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(LateFeeRule).order_by(LateFeeRule.name)
-    pagination = paginate(query, page)
-    return render_template("finance/late_fee_rules.html", rules=p["rows"], p=pagination, active_page="late_fee_rules")
+    p = paginate(query, page)
+    return render_template("finance/late_fee_rules.html", rules=p["rows"], p=p, active_page="late_fee_rules")
 
 
 @bp.route("/late-fee-rules/new", methods=["POST"])
@@ -250,8 +250,8 @@ def list_bank_accounts():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(BankAccount).order_by(BankAccount.name)
-    pagination = paginate(query, page)
-    return render_template("finance/bank_accounts.html", accounts=p["rows"], p=pagination, active_page="bank_accounts")
+    p = paginate(query, page)
+    return render_template("finance/bank_accounts.html", accounts=p["rows"], p=p, active_page="bank_accounts")
 
 
 @bp.route("/bank-accounts/<int:aid>/transactions")
@@ -262,8 +262,8 @@ def list_bank_transactions(aid):
     if not account: return redirect("/finance/bank-accounts")
     page = int(request.args.get("page", 1))
     query = db.query(BankTransaction).filter(BankTransaction.account_id == aid).order_by(BankTransaction.transaction_date.desc())
-    pagination = paginate(query, page)
-    return render_template("finance/bank_transactions.html", account=account, txns=p["rows"], p=pagination, active_page="bank_accounts")
+    p = paginate(query, page)
+    return render_template("finance/bank_transactions.html", account=account, txns=p["rows"], p=p, active_page="bank_accounts")
 
 
 @bp.route("/bank-accounts/<int:aid>/transactions/new", methods=["POST"])
@@ -311,8 +311,8 @@ def list_contractors():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(Contractor1099).order_by(Contractor1099.name)
-    pagination = paginate(query, page)
-    return render_template("finance/contractors.html", contractors=p["rows"], p=pagination, active_page="contractors")
+    p = paginate(query, page)
+    return render_template("finance/contractors.html", contractors=p["rows"], p=p, active_page="contractors")
 
 
 @bp.route("/contractors/new", methods=["POST"])
@@ -337,8 +337,8 @@ def list_tax_exemptions():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(TaxExemption).order_by(TaxExemption.customer_id)
-    pagination = paginate(query, page)
-    return render_template("finance/tax_exemptions.html", items=p["rows"], p=pagination, active_page="tax_exemptions")
+    p = paginate(query, page)
+    return render_template("finance/tax_exemptions.html", items=p["rows"], p=p, active_page="tax_exemptions")
 
 
 @bp.route("/tax-exemptions/new", methods=["POST"])
@@ -384,8 +384,8 @@ def customer_statements():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(Customer).order_by(Customer.name)
-    pagination = paginate(query, page)
-    return render_template("finance/statements.html", customers=p["rows"], p=pagination, active_page="statements")
+    p = paginate(query, page)
+    return render_template("finance/statements.html", customers=p["rows"], p=p, active_page="statements")
 
 
 @bp.route("/customer-statements/<int:cid>")
@@ -399,7 +399,7 @@ def view_statement(cid):
         WorkOrder.customer_id == cid,
         Invoice.status.in_(["Unpaid", "Partial"])
     ).order_by(Invoice.created_at)
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     total_due = sum(inv.total_amount - inv.amount_paid for inv in p["rows"])
     return render_template("finance/statement_detail.html", customer=customer,
-                           invoices=p["rows"], p=pagination, total_due=total_due, active_page="statements")
+                           invoices=p["rows"], p=p, total_due=total_due, active_page="statements")

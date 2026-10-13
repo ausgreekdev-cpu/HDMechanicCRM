@@ -117,13 +117,13 @@ def work_orders():
     user = _get_portal_user()
     customer = db.query(Customer).filter(Customer.id == user.customer_id).first()
     wos = []
-    pagination = None
+    p = None
     if customer:
         page = int(request.args.get("page", 1))
         query = db.query(WorkOrder).filter(WorkOrder.customer_id == customer.id).order_by(WorkOrder.created_at.desc())
-        pagination = paginate(query, page)
+        p = paginate(query, page)
         wos = p["rows"]
-    return render_template("portal/work_orders.html", work_orders=wos, customer=customer, p=pagination)
+    return render_template("portal/work_orders.html", work_orders=wos, customer=customer, p=p)
 
 
 @bp.route("/invoices")
@@ -133,15 +133,15 @@ def invoices():
     user = _get_portal_user()
     customer = db.query(Customer).filter(Customer.id == user.customer_id).first()
     invoice_list = []
-    pagination = None
+    p = None
     if customer:
         wo_ids = [wo.id for wo in db.query(WorkOrder).filter(WorkOrder.customer_id == customer.id).all()]
         if wo_ids:
             page = int(request.args.get("page", 1))
             query = db.query(Invoice).filter(Invoice.work_order_id.in_(wo_ids)).order_by(Invoice.created_at.desc())
-            pagination = paginate(query, page)
+            p = paginate(query, page)
             invoice_list = p["rows"]
-    return render_template("portal/invoices.html", invoices=invoice_list, customer=customer, p=pagination)
+    return render_template("portal/invoices.html", invoices=invoice_list, customer=customer, p=p)
 
 
 @bp.route("/messages", methods=["GET", "POST"])
@@ -168,8 +168,8 @@ def messages():
     query = db.query(CustomerPortalMessage).filter(
         CustomerPortalMessage.portal_user_id == user.id
     ).order_by(CustomerPortalMessage.created_at.desc())
-    pagination = paginate(query, page)
-    return render_template("portal/messages.html", messages=p["rows"], p=pagination)
+    p = paginate(query, page)
+    return render_template("portal/messages.html", messages=p["rows"], p=p)
 
 
 @bp.route("/request-service", methods=["GET", "POST"])
@@ -247,8 +247,8 @@ def admin_customers():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(CustomerPortalUser).order_by(CustomerPortalUser.created_at.desc())
-    pagination = paginate(query, page)
-    return render_template("portal/admin_customers.html", portal_users=p["rows"], p=pagination)
+    p = paginate(query, page)
+    return render_template("portal/admin_customers.html", portal_users=p["rows"], p=p)
 
 
 @bp.route("/admin/message/<int:msg_id>/reply", methods=["POST"])

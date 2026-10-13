@@ -78,8 +78,8 @@ def admin_users():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(User).order_by(User.username)
-    pagination = paginate(query, page)
-    return render_template("admin/users.html", users=p["rows"], p=pagination, active_page="admin_users")
+    p = paginate(query, page)
+    return render_template("admin/users.html", users=p["rows"], p=p, active_page="admin_users")
 
 
 @bp.route("/admin/users/new", methods=["POST"])
@@ -262,7 +262,7 @@ def technician_efficiency():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(Technician).filter(Technician.is_active == True).order_by(Technician.name)
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     results = []
     for t in p["rows"]:
         total_hours = db.query(func.sum(WorkOrder.labor_hours)).join(
@@ -274,7 +274,7 @@ def technician_efficiency():
         results.append({"name": t.name, "specialization": t.specialization or "",
                         "hourly_rate": t.hourly_rate, "total_hours": total_hours,
                         "wo_count": wo_count, "earned": total_hours * t.hourly_rate})
-    return render_template("reports/tech_efficiency.html", techs=results, p=pagination, active_page="reports")
+    return render_template("reports/tech_efficiency.html", techs=results, p=p, active_page="reports")
 
 
 # ---- Alerts ----
@@ -285,9 +285,9 @@ def list_alerts():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(Alert).order_by(Alert.created_at.desc())
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     unread = db.query(Alert).filter(Alert.is_read == False).count()
-    return render_template("alerts.html", alerts=p["rows"], p=pagination, unread=unread, active_page="alerts")
+    return render_template("alerts.html", alerts=p["rows"], p=p, unread=unread, active_page="alerts")
 
 
 @bp.route("/alerts/<int:alert_id>/read", methods=["POST"])
@@ -310,9 +310,9 @@ def list_service_reminders():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(ServiceReminder).order_by(ServiceReminder.vehicle_id)
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     vehicles = db.query(Vehicle).order_by(Vehicle.make).all()
-    return render_template("service_reminders.html", reminders=p["rows"], p=pagination,
+    return render_template("service_reminders.html", reminders=p["rows"], p=p,
                            vehicles=vehicles, active_page="service_reminders")
 
 
@@ -519,10 +519,10 @@ def list_recurring_work_orders():
     db = g.db
     page = int(request.args.get("page", 1))
     query = db.query(RecurringWorkOrder).order_by(RecurringWorkOrder.next_due_date)
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     customers = db.query(Customer).order_by(Customer.name).all()
     vehicles = db.query(Vehicle).order_by(Vehicle.make).all()
-    return render_template("recurring_wo/list.html", items=p["rows"], p=pagination, customers=customers,
+    return render_template("recurring_wo/list.html", items=p["rows"], p=p, customers=customers,
                            vehicles=vehicles, active_page="recurring_wo")
 
 

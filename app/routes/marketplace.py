@@ -66,10 +66,10 @@ def category(slug):
     query = g.db.query(WorkflowTemplate).filter_by(
         category_id=cat.id, is_active=True
     ).order_by(WorkflowTemplate.is_featured.desc(), WorkflowTemplate.purchase_count.desc())
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     user_plan = _get_user_plan()
     return render_template("marketplace/category.html",
-        category=cat, templates=p["rows"], p=pagination,
+        category=cat, templates=p["rows"], p=p,
         user_plan=user_plan, has_access=_user_has_template_access)
 
 
@@ -171,13 +171,13 @@ def my_templates():
     query = g.db.query(TemplatePurchase).filter_by(
         user_id=session["user_id"], status="completed"
     )
-    pagination = paginate(query, page)
+    p = paginate(query, page)
     sub = g.db.query(UserSubscription).filter(
         UserSubscription.user_id == session["user_id"],
         UserSubscription.status == "active"
     ).first()
     return render_template("marketplace/my_templates.html",
-        purchases=p["rows"], p=pagination, subscription=sub)
+        purchases=p["rows"], p=p, subscription=sub)
 
 
 @bp.route("/api/check-access/<int:tid>")
