@@ -173,8 +173,13 @@ def create_app(config_override=None):
     app.register_blueprint(quote_to_wo.bp)
     app.register_blueprint(terms.bp)
     app.register_blueprint(square_payments.bp)
-    csrf.exempt(square_payments.bp)
+    # Only the Square webhook is exempt: it authenticates via HMAC signature,
+    # not a browser session. Checkout/success/cancel require a CSRF token.
+    csrf.exempt(square_payments.webhook)
     app.register_blueprint(analytics_api.bp)
+    # Telemetry endpoints (crash/session/pageview) are POSTed by the Android
+    # app, which has no session cookie or CSRF token; they are idempotent
+    # and rate-limited.
     csrf.exempt(analytics_api.bp)
 
     return app

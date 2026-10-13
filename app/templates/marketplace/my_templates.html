@@ -53,6 +53,7 @@
                     <div class="d-flex gap-2">
                         <a href="{{ url_for('marketplace.template_detail', slug=p.template.slug) }}" class="btn btn-outline-primary btn-sm flex-fill">View</a>
                         <form method="post" action="{{ url_for('marketplace.apply_template', tid=p.template.id) }}" class="flex-fill">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-play-fill me-1"></i>Apply</button>
                         </form>
                     </div>

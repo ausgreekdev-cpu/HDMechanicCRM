@@ -46,6 +46,7 @@
                     <button class="btn btn-secondary w-100" disabled>Current Plan</button>
                     {% else %}
                     <form method="post" action="{{ url_for('square_payments.checkout_plan', plan_id=plan.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="cycle" value="monthly" class="cycle-input">
                         <button type="submit" class="btn btn-{{ 'primary' if plan.slug == 'pro' else 'outline-primary' }} w-100 btn-lg">
                             Subscribe Now

@@ -75,6 +75,7 @@
                     <h5>You have access</h5>
                     <p class="text-secondary">Apply this template to your workflow.</p>
                     <form method="post" action="{{ url_for('marketplace.apply_template', tid=template.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-success btn-lg w-100"><i class="bi bi-play-fill me-2"></i>Apply Template</button>
                     </form>
                     {% elif purchased %}
@@ -82,6 +83,7 @@
                     <h5>Purchased</h5>
                     <p class="text-secondary">You own this template.</p>
                     <form method="post" action="{{ url_for('marketplace.apply_template', tid=template.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-play-fill me-2"></i>Apply Template</button>
                     </form>
                     {% elif template.tier == 'free' %}
@@ -90,6 +92,7 @@
                     <p class="text-secondary">No purchase required.</p>
                     <a href="{{ url_for('marketplace.plans') }}" class="btn btn-outline-secondary w-100 mb-2">Upgrade for More</a>
                     <form method="post" action="{{ url_for('marketplace.apply_template', tid=template.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-success btn-lg w-100"><i class="bi bi-play-fill me-2"></i>Use Free Template</button>
                     </form>
                     {% else %}
@@ -99,6 +102,7 @@
 
                     {% if template.price > 0 %}
                     <form method="post" action="{{ url_for('square_payments.checkout_template', tid=template.id) }}" class="mb-3">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">
                             Buy for ${{ "%.2f"|format(template.price) }}
                         </button>
