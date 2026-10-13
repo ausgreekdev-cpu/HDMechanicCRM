@@ -131,7 +131,7 @@ def apply_template(tid):
         return redirect(url_for("marketplace.template_detail", slug=tmpl.slug))
 
     flash(f"Template '{tmpl.name}' applied! Steps have been added to your workflow.", "success")
-    return redirect(url_for("work_orders.work_orders_list"))
+    return redirect(url_for("work_orders.list_work_orders"))
 
 
 @bp.route("/plans")
