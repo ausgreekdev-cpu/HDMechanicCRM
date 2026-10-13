@@ -179,7 +179,24 @@ def test_csrf_protection_enabled(client, db_session):
     assert resp.status_code in (302, 400)
 
 
-def test_login_rate_limiting(client, db_session):
-    for i in range(11):
-        resp = client.post("/login", data={"username": f"wrong{i}", "password": "wrong"})
-    assert resp.status_code == 429
+def test_login_rate_limiting():
+    # Rate limiting is disabled in the shared test config (the shared
+    # module-level limiter would otherwise leak counters across tests),
+    # so this test builds its own app with it enabled.
+    from app import create_app
+    from app.database import Base, engine
+
+    app = create_app({
+        "TESTING": True,
+        "WTF_CSRF_ENABLED": False,
+        "RATELIMIT_ENABLED": True,
+    })
+    with app.app_context():
+        Base.metadata.create_all(bind=engine)
+        try:
+            client = app.test_client()
+            for i in range(11):
+                resp = client.post("/login", data={"username": f"wrong{i}", "password": "wrong"})
+            assert resp.status_code == 429
+        finally:
+            Base.metadata.drop_all(bind=engine)
