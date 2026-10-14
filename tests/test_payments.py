@@ -1,4 +1,7 @@
 """Payment security tests: forgery resistance, server-side verification, webhooks."""
+import hashlib
+import hmac
+import json
 from datetime import datetime, timedelta
 
 from app.auth import hash_password
@@ -46,17 +49,51 @@ def _add_plan(slug="secplan"):
     return pid
 
 
-def _pending_purchase(uid, tid, amount=19.99, age_hours=None):
+def _pending_purchase(uid, tid, amount=19.99, age_hours=None, link_id=None):
     db = SessionLocal()
     purchase = TemplatePurchase(user_id=uid, template_id=tid, amount_paid=amount,
                                 status="pending")
     if age_hours is not None:
         purchase.created_at = datetime.utcnow() - timedelta(hours=age_hours)
+    if link_id is not None:
+        purchase.square_payment_link_id = link_id
     db.add(purchase)
     db.commit()
     purchase_id = purchase.id
     db.close()
     return purchase_id
+
+
+def _pending_subscription(uid, plan_id, cycle="monthly", link_id=None, age_hours=None):
+    db = SessionLocal()
+    sub = UserSubscription(user_id=uid, plan_id=plan_id, billing_cycle=cycle,
+                           status="pending")
+    if link_id is not None:
+        sub.square_payment_link_id = link_id
+    if age_hours is not None:
+        sub.created_at = datetime.utcnow() - timedelta(hours=age_hours)
+    db.add(sub)
+    db.commit()
+    sub_id = sub.id
+    db.close()
+    return sub_id
+
+
+WEBHOOK_URL = "https://localhost/payments/webhook"
+
+
+def _post_webhook(client, payment, key="whsec_test"):
+    body = json.dumps({
+        "type": "payment.completed",
+        "data": {"object": {"payment": payment}},
+    })
+    sig = hmac.new(key.encode(), (body + WEBHOOK_URL).encode(), hashlib.sha256).hexdigest()
+    return client.post(
+        "/payments/webhook",
+        data=body,
+        content_type="application/json",
+        headers={"x-square-hmacsha256-signature": sig},
+    )
 
 
 def _login(client, username, password):
@@ -373,3 +410,201 @@ def test_find_payment_exception_returns_none(monkeypatch):
         lambda: _FakeSquareClient(RuntimeError("network down")),
     )
     assert _find_completed_payment() is None
+
+
+# --- webhook grants (payment.completed) -------------------------------------
+
+def test_webhook_grants_template_by_payment_link_id(csrf_client, monkeypatch):
+    monkeypatch.setenv("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY", "whsec_test")
+    uid, _, _ = _add_user("hookuser", "HookPass1!")
+    tid = _add_template("hook-tpl")
+    pending = _pending_purchase(uid, tid, link_id="link_abc")
+
+    resp = _post_webhook(csrf_client, {
+        "id": "sq_pay_1",
+        "payment_link_id": "link_abc",
+        "amount_money": {"amount": 1999, "currency": "AUD"},
+    })
+    assert resp.status_code == 200
+
+    db = SessionLocal()
+    purchase = db.query(TemplatePurchase).get(pending)
+    assert purchase.status == "completed"
+    assert purchase.stripe_payment_id == "sq_pay_1"
+    assert db.query(WorkflowTemplate).get(tid).purchase_count == 1
+    db.close()
+
+
+def test_webhook_grants_subscription_by_payment_link_id(csrf_client, monkeypatch):
+    monkeypatch.setenv("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY", "whsec_test")
+    uid, _, _ = _add_user("hookuser", "HookPass1!")
+    pid = _add_plan("hook-plan")
+    sub_id = _pending_subscription(uid, pid, link_id="link_sub_1")
+
+    resp = _post_webhook(csrf_client, {
+        "id": "sq_pay_2",
+        "payment_link_id": "link_sub_1",
+        "amount_money": {"amount": 2999, "currency": "AUD"},
+    })
+    assert resp.status_code == 200
+
+    db = SessionLocal()
+    sub = db.query(UserSubscription).get(sub_id)
+    assert sub.status == "active"
+    assert sub.stripe_subscription_id == "sq_pay_2"
+    assert sub.current_period_end is not None
+    db.close()
+
+
+def test_webhook_amount_mismatch_no_grant(csrf_client, monkeypatch):
+    monkeypatch.setenv("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY", "whsec_test")
+    uid, _, _ = _add_user("hookuser", "HookPass1!")
+    tid = _add_template("hook-tpl")
+    pending = _pending_purchase(uid, tid, link_id="link_abc")
+
+    resp = _post_webhook(csrf_client, {
+        "id": "sq_pay_3",
+        "payment_link_id": "link_abc",
+        "amount_money": {"amount": 500, "currency": "AUD"},
+    })
+    assert resp.status_code == 200
+
+    db = SessionLocal()
+    assert db.query(TemplatePurchase).get(pending).status == "pending"
+    db.close()
+
+
+def test_webhook_expired_pending_no_grant(csrf_client, monkeypatch):
+    monkeypatch.setenv("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY", "whsec_test")
+    uid, _, _ = _add_user("hookuser", "HookPass1!")
+    tid = _add_template("hook-tpl")
+    pending = _pending_purchase(uid, tid, link_id="link_abc", age_hours=25)
+
+    _post_webhook(csrf_client, {
+        "id": "sq_pay_4",
+        "payment_link_id": "link_abc",
+        "amount_money": {"amount": 1999, "currency": "AUD"},
+    })
+
+    db = SessionLocal()
+    assert db.query(TemplatePurchase).get(pending).status == "pending"
+    db.close()
+
+
+def test_webhook_duplicate_delivery_idempotent(csrf_client, monkeypatch):
+    monkeypatch.setenv("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY", "whsec_test")
+    uid, _, _ = _add_user("hookuser", "HookPass1!")
+    tid = _add_template("hook-tpl")
+    pending = _pending_purchase(uid, tid, link_id="link_abc")
+    payment = {
+        "id": "sq_pay_5",
+        "payment_link_id": "link_abc",
+        "amount_money": {"amount": 1999, "currency": "AUD"},
+    }
+
+    assert _post_webhook(csrf_client, payment).status_code == 200
+    assert _post_webhook(csrf_client, payment).status_code == 200
+
+    db = SessionLocal()
+    purchase = db.query(TemplatePurchase).get(pending)
+    assert purchase.status == "completed"
+    assert db.query(TemplatePurchase).filter_by(template_id=tid).count() == 1
+    assert db.query(WorkflowTemplate).get(tid).purchase_count == 1
+    db.close()
+
+
+def test_webhook_ambiguous_fallback_skips(csrf_client, monkeypatch):
+    monkeypatch.setenv("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY", "whsec_test")
+    uid, _, _ = _add_user("hookuser", "HookPass1!")
+    tid1 = _add_template("hook-tpl-1")
+    tid2 = _add_template("hook-tpl-2")
+    p1 = _pending_purchase(uid, tid1)
+    p2 = _pending_purchase(uid, tid2)
+    # Both pendings are for 19.99 and the payment carries no link id.
+
+    _post_webhook(csrf_client, {
+        "id": "sq_pay_6",
+        "amount_money": {"amount": 1999, "currency": "AUD"},
+    })
+
+    db = SessionLocal()
+    assert db.query(TemplatePurchase).get(p1).status == "pending"
+    assert db.query(TemplatePurchase).get(p2).status == "pending"
+    db.close()
+
+
+def test_webhook_unique_fallback_grants(csrf_client, monkeypatch):
+    monkeypatch.setenv("CRM_SQUARE_WEBHOOK_SIGNATURE_KEY", "whsec_test")
+    uid, _, _ = _add_user("hookuser", "HookPass1!")
+    tid = _add_template("hook-tpl")
+    pending = _pending_purchase(uid, tid)  # no link id
+
+    _post_webhook(csrf_client, {
+        "id": "sq_pay_7",
+        "amount_money": {"amount": 1999, "currency": "AUD"},
+    })
+
+    db = SessionLocal()
+    purchase = db.query(TemplatePurchase).get(pending)
+    assert purchase.status == "completed"
+    assert purchase.stripe_payment_id == "sq_pay_7"
+    db.close()
+
+
+def test_redirect_after_webhook_grant_is_friendly(csrf_client, monkeypatch):
+    uid, username, password = _add_user()
+    tid = _add_template("race-tpl")
+    pending = _pending_purchase(uid, tid)
+    db = SessionLocal()
+    purchase = db.query(TemplatePurchase).get(pending)
+    purchase.status = "completed"
+    purchase.stripe_payment_id = "sq_pay_webhook"
+    db.commit()
+    db.close()
+    _login(csrf_client, username, password)
+
+    resp = csrf_client.get(
+        f"/payments/success?source=template&item_id={tid}&purchase_id={pending}"
+    )
+    assert resp.status_code == 302
+
+    db = SessionLocal()
+    purchase = db.query(TemplatePurchase).get(pending)
+    assert purchase.status == "completed"
+    assert purchase.stripe_payment_id == "sq_pay_webhook"  # not overwritten
+    db.close()
+
+
+# --- demo gate --------------------------------------------------------------
+
+def test_create_payment_link_demo_gate(monkeypatch):
+    from app.payments_square import create_payment_link
+
+    monkeypatch.delenv("CRM_ALLOW_DEMO_PAYMENTS", raising=False)
+    result = create_payment_link(100, "AUD", "t", "d", "https://example.test/ok")
+    assert "error" in result
+    assert "demo" not in result
+
+    monkeypatch.setenv("CRM_ALLOW_DEMO_PAYMENTS", "1")
+    result = create_payment_link(100, "AUD", "t", "d", "https://example.test/ok")
+    assert result.get("demo") is True
+
+
+def test_demo_gate_off_blocks_checkout(csrf_client, monkeypatch):
+    monkeypatch.delenv("CRM_ALLOW_DEMO_PAYMENTS", raising=False)
+    uid, username, password = _add_user()
+    tid = _add_template("gate-tpl")
+    _login(csrf_client, username, password)
+
+    token = get_csrf(csrf_client, "/marketplace/template/gate-tpl")
+    resp = csrf_client.post(
+        f"/payments/checkout/template/{tid}",
+        data={"csrf_token": token},
+        headers=REFERER,
+    )
+    assert resp.status_code == 302
+
+    db = SessionLocal()
+    # The pending row is rolled back when the payment link cannot be created.
+    assert db.query(TemplatePurchase).filter_by(template_id=tid).count() == 0
+    db.close()
