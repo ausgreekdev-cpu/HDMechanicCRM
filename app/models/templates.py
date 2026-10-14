@@ -66,6 +66,7 @@ class TemplatePurchase(Base):
     amount_paid = Column(Numeric(10,2), nullable=False)
     payment_method = Column(String(50), default="square")
     stripe_payment_id = Column(String(200), default="")
+    square_payment_link_id = Column(String(200), nullable=True)
     status = Column(String(20), default="completed")  # completed, refunded, pending
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -105,6 +106,7 @@ class UserSubscription(Base):
     billing_cycle = Column(String(20), default="monthly")  # monthly, yearly
     status = Column(String(20), default="active")  # active, canceled, past_due, trialing, pending
     stripe_subscription_id = Column(String(200), default="")
+    square_payment_link_id = Column(String(200), nullable=True)
     stripe_customer_id = Column(String(200), default="")
     current_period_start = Column(DateTime, default=datetime.utcnow)
     current_period_end = Column(DateTime)
