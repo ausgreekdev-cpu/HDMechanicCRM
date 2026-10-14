@@ -408,15 +408,16 @@ def chart_scrap():
 @admin_required
 def backup_database():
     from app.database import DB_PATH
-    from datetime import date
     if not DB_PATH:
         flash("Backup is only available when running on SQLite. "
               "Use pg_dump for PostgreSQL databases.", "warning")
         return redirect("/settings")
-    backup_path = DB_PATH + f".backup-{date.today().isoformat()}"
+    stamp = datetime.now().strftime("%Y-%m-%d-%H%M%S-%f")
+    backup_path = DB_PATH + f".backup-{stamp}"
     shutil.copy2(DB_PATH, backup_path)
-    flash(f"Database backed up to data/", "success")
-    return send_file(backup_path, as_attachment=True, download_name=f"crm-backup-{date.today().isoformat()}.db")
+    filename = os.path.basename(backup_path)
+    flash(f"Database backed up to {filename}", "success")
+    return send_file(backup_path, as_attachment=True, download_name=f"crm-backup-{stamp}.db")
 
 
 # ---- Global Search ----
