@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from app.timeutils import utcnow
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g, jsonify, session, abort
-from app.payments_square import square_enabled, get_square_config, create_payment_link, create_subscription, cancel_subscription, verify_webhook_signature, find_completed_payment
+from app.payments_square import square_enabled, get_square_config, create_payment_link, verify_webhook_signature, find_completed_payment
 SQUARE_CURRENCY = os.environ.get("CRM_SQUARE_CURRENCY", "AUD")
 from app.models.templates import TemplatePurchase, SubscriptionPlan, UserSubscription, WorkflowTemplate
 
