@@ -40,6 +40,96 @@ def _verified_payment_id(amount_cents):
     return find_completed_payment(amount_cents, currency=SQUARE_CURRENCY, exclude_ids=used)
 
 
+def _expected_subscription_cents(sub):
+    plan = sub.plan
+    if not plan:
+        return None
+    return int(plan.price_monthly * 100) if sub.billing_cycle == "monthly" else int(plan.price_yearly * 100)
+
+
+def _grant_template_purchase(purchase, payment_id):
+    purchase.stripe_payment_id = payment_id
+    purchase.payment_method = "square"
+    purchase.status = "completed"
+    tmpl = g.db.query(WorkflowTemplate).get(purchase.template_id)
+    if tmpl:
+        tmpl.purchase_count = (tmpl.purchase_count or 0) + 1
+
+
+def _grant_subscription(sub, payment_id):
+    sub.stripe_subscription_id = payment_id
+    sub.status = "active"
+    sub.current_period_start = utcnow()
+    sub.current_period_end = utcnow() + timedelta(days=30 if sub.billing_cycle == "monthly" else 365)
+
+
+def _handle_payment_completed(payment):
+    """Grant a pending purchase/subscription from a Square payment webhook.
+
+    Matches by payment_link_id when present (exact); otherwise grants only
+    when exactly one pending row matches the paid amount within the TTL.
+    Duplicate deliveries are no-ops.
+    """
+    payment_id = payment.get("id")
+    if not payment_id:
+        return
+    already = (
+        g.db.query(TemplatePurchase).filter_by(stripe_payment_id=payment_id).first()
+        or g.db.query(UserSubscription).filter_by(stripe_subscription_id=payment_id).first()
+    )
+    if already:
+        return
+
+    money = payment.get("amount_money") or {}
+    amount = money.get("amount")
+    currency = money.get("currency")
+    link_id = payment.get("payment_link_id") or ""
+
+    def amount_matches(purchase_cents):
+        return purchase_cents is not None and amount == purchase_cents and (
+            not currency or currency == SQUARE_CURRENCY
+        )
+
+    if link_id:
+        tp = g.db.query(TemplatePurchase).filter_by(
+            status="pending", square_payment_link_id=link_id
+        ).first()
+        if tp and amount_matches(int(tp.amount_paid * 100)) and not _is_expired(tp.created_at):
+            _grant_template_purchase(tp, payment_id)
+            g.db.commit()
+            logger.info(f"Webhook granted template purchase {tp.id} via payment {payment_id}")
+            return
+        us = g.db.query(UserSubscription).filter_by(
+            status="pending", square_payment_link_id=link_id
+        ).first()
+        if us and amount_matches(_expected_subscription_cents(us)) and not _is_expired(us.created_at):
+            _grant_subscription(us, payment_id)
+            g.db.commit()
+            logger.info(f"Webhook granted subscription {us.id} via payment {payment_id}")
+            return
+
+    tp_candidates = [
+        p for p in g.db.query(TemplatePurchase).filter_by(status="pending").all()
+        if amount_matches(int(p.amount_paid * 100)) and not _is_expired(p.created_at)
+    ]
+    us_candidates = [
+        s for s in g.db.query(UserSubscription).filter_by(status="pending").all()
+        if amount_matches(_expected_subscription_cents(s)) and not _is_expired(s.created_at)
+    ]
+    total = len(tp_candidates) + len(us_candidates)
+    if total == 1:
+        if tp_candidates:
+            _grant_template_purchase(tp_candidates[0], payment_id)
+        else:
+            _grant_subscription(us_candidates[0], payment_id)
+        g.db.commit()
+        logger.info(f"Webhook granted pending row via amount fallback, payment {payment_id}")
+    elif total > 1:
+        logger.warning(
+            f"Ambiguous payment {payment_id}: {total} pending rows match amount {amount}; skipping"
+        )
+
+
 @bp.route("/config")
 def config():
     """Return Square config for frontend."""
@@ -88,6 +178,8 @@ def checkout_template(tid):
         title=tmpl.name,
         description=tmpl.description[:200] if tmpl.description else "",
         redirect_url=success_url,
+        payment_note=f"crm:tpl:{pending.id}",
+        idempotency_key=f"checkout_tpl_{pending.id}",
     )
 
     if result.get("error"):
@@ -105,6 +197,7 @@ def checkout_template(tid):
         flash(f"Purchased '{tmpl.name}' for ${tmpl.price:.2f} (demo mode)!", "success")
         return redirect(url_for("marketplace.template_detail", slug=tmpl.slug))
 
+    pending.square_payment_link_id = result.get("payment_link_id", "")
     g.db.commit()
     return redirect(result["url"])
 
@@ -154,6 +247,8 @@ def checkout_plan(plan_id):
         title=f"{plan.name} ({cycle})",
         description=plan.description[:200] if plan.description else "",
         redirect_url=success_url,
+        payment_note=f"crm:sub:{pending.id}",
+        idempotency_key=f"checkout_sub_{pending.id}",
     )
 
     if result.get("error"):
@@ -170,6 +265,7 @@ def checkout_plan(plan_id):
         flash(f"Subscribed to {plan.name} ({cycle}) (demo mode)!", "success")
         return redirect(url_for("marketplace.index"))
 
+    pending.square_payment_link_id = result.get("payment_link_id", "")
     g.db.commit()
     return redirect(result["url"])
 
@@ -189,53 +285,60 @@ def payment_success():
 
     if source == "template":
         purchase = g.db.query(TemplatePurchase).get(request.args.get("purchase_id", type=int) or 0)
-        if not purchase or purchase.user_id != session["user_id"] or purchase.status != "pending":
+        if not purchase or purchase.user_id != session["user_id"]:
             flash("No pending purchase found for this account.", "warning")
+            return redirect(url_for("marketplace.index"))
+        tmpl = g.db.query(WorkflowTemplate).get(purchase.template_id)
+        if not tmpl:
+            flash("Template no longer exists.", "warning")
+            return redirect(url_for("marketplace.index"))
+        if purchase.status == "completed":
+            # The webhook already granted this purchase (user closed the
+            # tab after paying, then came back).
+            flash(f"'{tmpl.name}' is already confirmed — enjoy!", "success")
+            return redirect(url_for("marketplace.template_detail", slug=tmpl.slug))
+        if purchase.status != "pending":
+            flash("This checkout expired. Please try again.", "warning")
             return redirect(url_for("marketplace.index"))
         if _is_expired(purchase.created_at):
             purchase.status = "expired"
             g.db.commit()
             flash("This checkout expired. Please try again.", "warning")
             return redirect(url_for("marketplace.index"))
-        tmpl = g.db.query(WorkflowTemplate).get(purchase.template_id)
-        if not tmpl:
-            flash("Template no longer exists.", "warning")
-            return redirect(url_for("marketplace.index"))
         pay_id = _verified_payment_id(int(purchase.amount_paid * 100))
         if not pay_id:
             flash("Payment not confirmed yet — give it a moment, then refresh.", "info")
             return redirect(url_for("marketplace.template_detail", slug=tmpl.slug))
-        purchase.stripe_payment_id = pay_id
-        purchase.payment_method = "square"
-        purchase.status = "completed"
-        tmpl.purchase_count = (tmpl.purchase_count or 0) + 1
+        _grant_template_purchase(purchase, pay_id)
         g.db.commit()
         flash(f"Purchased '{tmpl.name}'!", "success")
         return redirect(url_for("marketplace.template_detail", slug=tmpl.slug))
 
     if source == "subscription":
         sub = g.db.query(UserSubscription).get(request.args.get("subscription_id", type=int) or 0)
-        if not sub or sub.user_id != session["user_id"] or sub.status != "pending":
+        if not sub or sub.user_id != session["user_id"]:
             flash("No pending subscription found for this account.", "warning")
             return redirect(url_for("marketplace.index"))
+        plan = sub.plan
+        if sub.status in ("active", "trialing"):
+            flash(f"Subscription to {plan.name if plan else 'this plan'} is already active!", "success")
+            return redirect(url_for("marketplace.index"))
+        if sub.status != "pending":
+            flash("This checkout expired. Please try again.", "warning")
+            return redirect(url_for("marketplace.plans"))
         if _is_expired(sub.created_at):
             sub.status = "expired"
             g.db.commit()
             flash("This checkout expired. Please try again.", "warning")
             return redirect(url_for("marketplace.plans"))
-        plan = sub.plan
         if not plan:
             flash("Plan no longer exists.", "warning")
             return redirect(url_for("marketplace.plans"))
-        price_cents = int(plan.price_monthly * 100) if sub.billing_cycle == "monthly" else int(plan.price_yearly * 100)
-        pay_id = _verified_payment_id(price_cents)
+        pay_id = _verified_payment_id(_expected_subscription_cents(sub))
         if not pay_id:
             flash("Payment not confirmed yet — give it a moment, then refresh.", "info")
             return redirect(url_for("marketplace.plans"))
-        sub.stripe_subscription_id = pay_id
-        sub.status = "active"
-        sub.current_period_start = utcnow()
-        sub.current_period_end = utcnow() + timedelta(days=30 if sub.billing_cycle == "monthly" else 365)
+        _grant_subscription(sub, pay_id)
         g.db.commit()
         flash(f"Subscribed to {plan.name}!", "success")
         return redirect(url_for("marketplace.index"))
@@ -264,7 +367,7 @@ def webhook():
 
     if event_type == "payment.completed":
         data = event.get("data", {}).get("object", {}).get("payment", {})
-        logger.info(f"Square payment completed: {data.get('id')}")
+        _handle_payment_completed(data)
 
     elif event_type == "subscription.created":
         logger.info(f"Square subscription created: {event.get('data', {}).get('object', {}).get('subscription', {}).get('id')}")

@@ -35,6 +35,15 @@ def square_enabled():
     return bool(_cfg("CRM_SQUARE_ACCESS_TOKEN"))
 
 
+def demo_payments_allowed():
+    """Inline fake completions only when explicitly opted in.
+
+    Without this flag, an unconfigured Square integration must fail loudly
+    instead of silently granting paid items for free.
+    """
+    return _cfg("CRM_ALLOW_DEMO_PAYMENTS", "").lower() in ("1", "true", "yes")
+
+
 def get_square_config():
     return {
         "enabled": square_enabled(),
@@ -44,22 +53,28 @@ def get_square_config():
     }
 
 
-def create_payment_link(amount_cents, currency, title, description, redirect_url, metadata=None):
+def create_payment_link(amount_cents, currency, title, description, redirect_url,
+                        payment_note=None, idempotency_key=None):
     if not square_enabled():
-        return {"url": redirect_url, "demo": True, "payment_id": f"sq_demo_{int(utcnow().timestamp())}"}
+        if demo_payments_allowed():
+            return {"url": redirect_url, "demo": True, "payment_id": f"sq_demo_{int(utcnow().timestamp())}"}
+        return {"error": "Online payments are not configured. Please contact the shop."}
 
     client = _client()
-    result = client.checkout.create_payment_link(
-        body={
-            "idempotency_key": f"tmpl_{int(utcnow().timestamp() * 1000)}",
-            "quick_pay": {
-                "name": title,
-                "price_money": {"amount": int(amount_cents), "currency": currency},
-                "location_id": _cfg("CRM_SQUARE_LOCATION_ID"),
-            },
-            "redirect_url": redirect_url,
-        }
-    )
+    body = {
+        "idempotency_key": idempotency_key or f"tmpl_{int(utcnow().timestamp() * 1000)}",
+        "quick_pay": {
+            "name": title,
+            "price_money": {"amount": int(amount_cents), "currency": currency},
+            "location_id": _cfg("CRM_SQUARE_LOCATION_ID"),
+        },
+        "redirect_url": redirect_url,
+    }
+    if payment_note:
+        # Square copies payment_note onto the resulting payment; used as
+        # defense-in-depth alongside payment_link_id matching.
+        body["payment_note"] = payment_note
+    result = client.checkout.create_payment_link(body=body)
     if result.is_success():
         return {"url": result.body["payment_link"]["url"], "payment_link_id": result.body["payment_link"]["id"]}
     else:

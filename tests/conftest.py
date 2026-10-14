@@ -4,6 +4,9 @@ import tempfile
 import pytest
 
 os.environ["CRM_SECRET_KEY"] = "test-secret-key-for-testing-only-1234567890abcdef"
+# Existing tests exercise the inline demo checkout flow; production default
+# is off (see demo_payments_allowed).
+os.environ["CRM_ALLOW_DEMO_PAYMENTS"] = "1"
 # Isolate tests from the developer database (app.database reads this at import).
 os.environ.setdefault(
     "CRM_DATABASE_URL",

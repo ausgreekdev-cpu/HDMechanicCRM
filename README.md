@@ -5,7 +5,7 @@ Full-stack CRM for auto repair shops: customers, vehicles, work orders, parts/in
 ## Stack
 
 - **Backend:** Flask 3 + SQLAlchemy 2 (SQLite by default, `CRM_DATABASE_URL` for Postgres), Flask-WTF CSRF, Flask-Limiter, Flask-Caching (Redis optional)
-- **Payments:** Square (payment links + webhooks); demo mode when Square is not configured
+- **Payments:** Square (payment links + webhook-verified grants); opt-in demo mode via `CRM_ALLOW_DEMO_PAYMENTS=1` when Square is not configured
 - **Frontend:** Jinja2 templates + Bootstrap
 - **Android:** native app under `android/` posting telemetry to `/api/analytics/*`
 - **Tooling:** pytest, ruff (`.ruff.toml`), GitHub Actions CI
@@ -31,6 +31,7 @@ The marketplace catalog seeds automatically on startup. Demo customers/vehicles 
 | `CRM_SQUARE_ACCESS_TOKEN`, `CRM_SQUARE_APPLICATION_ID`, `CRM_SQUARE_LOCATION_ID`, `CRM_SQUARE_ENVIRONMENT` | Square payments |
 | `CRM_SQUARE_WEBHOOK_SIGNATURE_KEY` | HMAC key for `/payments/webhook` verification |
 | `CRM_SQUARE_CURRENCY` | Payment currency (default `AUD`) |
+| `CRM_ALLOW_DEMO_PAYMENTS` | `1` = inline fake purchases when Square is unset (**local dev only**) |
 | `CRM_SEED_DEMO` | `1` = seed demo customers/vehicles at startup |
 | `CRM_ADMIN_USER` / `CRM_ADMIN_PASSWORD` | Bootstrap admin login |
 | `CRM_TWILIO_SID` / `CRM_TWILIO_AUTH` / `CRM_TWILIO_PHONE` | SMS |
