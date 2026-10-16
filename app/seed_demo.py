@@ -156,7 +156,10 @@ def seed_demo_data():
         # Invoices
         for wo in [w for w in work_orders if w.status == "Completed"][:20]:
             inv_items = db.query(WorkOrderItem).filter(WorkOrderItem.work_order_id == wo.id).all()
-            items_total = float(sum(ip.quantity * ip.unit_price for ip in inv_items))
+            # Coerce each operand: instances created earlier in this session
+            # still hold Python floats while GC-evicted ones reload from the
+            # DB as Decimals — mixing them raises TypeError.
+            items_total = float(sum(float(ip.quantity or 0) * float(ip.unit_price or 0) for ip in inv_items))
             labor = float(wo.labor_hours or 0) * 85
             inv_subtotal = items_total + labor
             inv_subtotal = max(inv_subtotal, 50)
