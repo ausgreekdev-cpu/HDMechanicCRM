@@ -35,6 +35,11 @@ jobs:
       - name: Run pytest with coverage
         run: pytest tests/ --cov=app --cov-report=term-missing -v
 
+      - name: Verify Alembic migrations
+        run: |
+          rm -f /tmp/ci-migrate.db
+          CRM_DATABASE_URL="sqlite:////tmp/ci-migrate.db" alembic upgrade head
+
   build-docker:
     name: Build Docker Image
     runs-on: ubuntu-latest
