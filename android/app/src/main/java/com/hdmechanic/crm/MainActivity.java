@@ -11,6 +11,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -84,8 +85,26 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 progressBar.setVisibility(View.GONE);
+                if (url.startsWith("file:")) {
+                    return; // local offline page — not an app pageview
+                }
                 long loadTime = System.currentTimeMillis() - pageLoadStartTime;
                 reportPageView(url, loadTime);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request,
+                                        WebResourceError error) {
+                if (request.isForMainFrame()) {
+                    view.loadUrl("file:///android_asset/offline.html");
+                }
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description,
+                                        String failingUrl) {
+                view.loadUrl("file:///android_asset/offline.html");
             }
 
             // Note: onReceivedSslError is intentionally NOT overridden —

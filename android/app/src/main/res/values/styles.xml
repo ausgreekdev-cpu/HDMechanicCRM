@@ -7,5 +7,6 @@
         <item name="colorSecondary">#3B82F6</item>
         <item name="android:statusBarColor">#001F3F</item>
         <item name="android:navigationBarColor">#001F3F</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
     </style>
 </resources>

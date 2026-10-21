@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection problem</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: #001F3F;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .card { padding: 2rem; max-width: 22rem; }
+        .icon { font-size: 3rem; margin-bottom: 0.5rem; }
+        h1 { font-size: 1.25rem; margin: 0.5rem 0; }
+        p { color: #9bb7d0; font-size: 0.95rem; line-height: 1.5; }
+        button {
+            margin-top: 1.25rem;
+            background: #3B82F6;
+            color: #fff;
+            border: 0;
+            border-radius: 8px;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        button:active { background: #2563EB; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">&#128268;</div>
+        <h1>No connection</h1>
+        <p>We couldn&rsquo;t reach HDMechanicCRM. Check your internet connection and try again.</p>
+        <button onclick="location.href='https://hdmechaniccrm.onrender.com/'">Retry</button>
+    </div>
+</body>
+</html>
