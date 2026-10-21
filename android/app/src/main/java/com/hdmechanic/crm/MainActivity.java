@@ -1,17 +1,20 @@
 package com.hdmechanic.crm;
 
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.SslErrorHandler;
-import android.net.http.SslError;
-import android.graphics.Bitmap;
 import android.widget.ProgressBar;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -58,9 +61,20 @@ public class MainActivity extends AppCompatActivity {
         settings.setBuiltInZoomControls(true);
         settings.setDisplayZoomControls(false);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
 
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return openExternalIfOffsite(request.getUrl());
+            }
+
+            @SuppressWarnings("deprecation")
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return openExternalIfOffsite(Uri.parse(url));
+            }
+
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 progressBar.setVisibility(View.VISIBLE);
@@ -74,16 +88,43 @@ public class MainActivity extends AppCompatActivity {
                 reportPageView(url, loadTime);
             }
 
-            @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                handler.proceed();
-            }
+            // Note: onReceivedSslError is intentionally NOT overridden —
+            // cert errors must cancel the load (a previous handler.proceed()
+            // bypass would fail Play security review).
         });
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {
                 progressBar.setProgress(newProgress);
+            }
+
+            @Override
+            public boolean onCreateWindow(WebView view, boolean isDialog,
+                                          boolean isUserGesture, Message resultMsg) {
+                // window.open / target=_blank: forward the URL to the browser.
+                WebView temp = new WebView(MainActivity.this);
+                temp.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView wv, WebResourceRequest req) {
+                        openExternalIfOffsite(req.getUrl());
+                        return true;
+                    }
+                });
+                WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                transport.setWebView(temp);
+                resultMsg.sendToTarget();
+                return true;
+            }
+        });
+
+        // Downloads (CSV exports, DB backups, attachments) go to the external
+        // browser, which has a real download manager.
+        webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+            } catch (ActivityNotFoundException e) {
+                Log.w(TAG, "No browser available to download " + url);
             }
         });
 
@@ -110,6 +151,26 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         webView.restoreState(savedInstanceState);
+    }
+
+    /**
+     * Open off-site URLs (e.g. the Square hosted payment page) in the
+     * external browser and consume the navigation. Google Play requires
+     * digital-goods purchases to happen outside the app; same-site
+     * navigation stays inside the WebView.
+     */
+    private boolean openExternalIfOffsite(Uri uri) {
+        String host = uri.getHost();
+        String appHost = Uri.parse(BASE_URL).getHost();
+        if (host == null || host.equalsIgnoreCase(appHost)) {
+            return false;
+        }
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (ActivityNotFoundException e) {
+            Log.w(TAG, "No browser available for " + uri);
+        }
+        return true;
     }
 
     private void installCrashHandler() {
