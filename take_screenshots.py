@@ -49,10 +49,11 @@ async def main():
             ("02-customers", "/customers"),
             ("03-vehicles", "/vehicles"),
             ("04-work-orders", "/work-orders"),
-            ("05-inventory", "/inventory"),
-            ("06-scrap-metal", "/scrap-metal"),
+            ("05-parts", "/parts"),
+            ("06-scrap-pickups", "/scrap/pickups"),
             ("07-invoices", "/invoices"),
-            ("08-analytics", "/analytics"),
+            ("08-reports", "/reports"),
+            ("09-marketplace", "/marketplace/"),
         ]
 
         for name, path in pages:

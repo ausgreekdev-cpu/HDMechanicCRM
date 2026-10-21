@@ -292,14 +292,64 @@ Unlike competitors charging $100-$600/month, HDMechanicCRM gives you everything 
 - [ ] Content rating questionnaire filled out
 
 ### Google Play Store
-- [ ] Google Play Developer account ($25 one-time fee)
-- [ ] PWA wrapped as TWA using Bubblewrap
-- [ ] Signing key generated and stored securely
-- [ ] AAB file built and tested
-- [ ] Store listing completed with all fields
-- [ ] Closed testing track set up for beta
-- [ ] Internal testing with 3+ testers
-- [ ] Submit for review (typically 3-7 days)
+
+The Play artifact is the native WebView app in `android/` (package
+`com.hdmechanic.crm`) — **not** the Bubblewrap/PWA path, which is legacy.
+Build it with `./gradlew bundleRelease` (see `android/`; requires JDK 17 +
+Android SDK). Purchases (Square) are completed in the external browser —
+the app routes off-site navigations out — so Play Billing is not required.
+
+**Listing URLs (live on the hosted deployment)**
+- Privacy policy: `https://hdmechaniccrm.onrender.com/privacy`
+- Terms: `https://hdmechaniccrm.onrender.com/terms`
+- Refund policy: `https://hdmechaniccrm.onrender.com/refund`
+- Account/data deletion: `https://hdmechaniccrm.onrender.com/data-deletion`
+
+**In-repo assets (screenshots/ + app/static/icons/)**
+- [x] Launcher icon 512x512: `app/static/icons/icon-512.png`
+- [x] Feature graphic 1024x500: `screenshots/feature-graphic.png`
+- [x] Phone screenshots 1080x1920: `screenshots/00-login.png` … `09-marketplace.png`
+      (regenerate anytime: boot the app with `CRM_SEED_DEMO=1`, then
+      `python take_screenshots.py`)
+
+**Release keystore (generate once, keep offline backup!)**
+```bash
+keytool -genkeypair -v -keystore hdmechanic-release.keystore \
+  -alias hdmechanic -keyalg RSA -keysize 2048 -validity 10000
+cp keystore.properties.example keystore.properties  # fill in values
+./gradlew bundleRelease   # signed app-release.aab
+```
+
+**Play Console submission flow**
+- [ ] Google Play Developer account ($25 one-time) + developer identity
+      verification (government ID; organizations need D-U-N-S)
+- [ ] Create app → category Business → free pricing
+- [ ] Upload the release AAB; enroll in **Play App Signing** (Play holds
+      the signing key; your keystore is the upload key)
+- [ ] Store listing: short/full description (above), screenshots,
+      feature graphic, app icon
+- [ ] **Data safety form** (draft below) — declare what the app collects
+- [ ] Content rating questionnaire (IARC) — business app, no special
+      content flags expected
+- [ ] Privacy policy URL + **account deletion URL** (App content page —
+      required for apps with account creation)
+- [ ] Target audience: 18+ (business tool)
+- [ ] **Closed testing: new personal accounts must run a closed test with
+      ≥12 testers for 14 continuous days** before applying for production
+      access — plan for this gate before launch day
+- [ ] After the closed-testing requirement: production release → review
+      (typically 3-7 days for new developers)
+
+**Data safety form draft** (declarations for Play Console)
+| Collected | Examples in this app | Shared | Required? |
+|---|---|---|---|
+| Personal info (email) | account login via the app UI | No | Yes (account functionality) |
+| App activity | in-app page views (own analytics API) | No | Yes (core functionality) |
+| Device IDs | app session ID, crash reports | No | Yes (analytics/crash reporting) |
+| Crash logs | Java stack traces posted to `/api/analytics/crash` | No | Yes (stability) |
+
+Not sold; not shared with third parties; retention: until account deletion
+is requested (`/data-deletion`). Encryption: in transit via HTTPS/TLS.
 
 ### Microsoft Store
 - [ ] Microsoft Partner Center account ($19 one-time fee)
