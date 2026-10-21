@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.hdmechanic.crm'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.hdmechanic.crm"
         minSdk 21
-        targetSdk 34
+        targetSdk 36
         versionCode 1
         versionName "1.0.0"
     }
@@ -29,7 +29,12 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
-            signingConfig signingConfigs.release
+            // Only sign when a keystore is configured (see
+            // keystore.properties.example); otherwise the build is unsigned
+            // and Play App Signing signs the upload.
+            if (project.hasProperty('storeFile')) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
