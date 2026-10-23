@@ -75,3 +75,29 @@ jobs:
           done
           curl -f http://localhost:8000/health || (docker logs test-app && exit 1)
           docker stop test-app
+
+  android-build:
+    name: Android AAB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release AAB
+        working-directory: android
+        run: ./gradlew --no-daemon bundleRelease
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
